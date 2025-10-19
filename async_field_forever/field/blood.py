@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-BLOOD.PY - The Blood of Nicole System
+BLOOD.PY - The Blood of Field4. 
 Низкоуровневый интерпретатор C для контроля железа
 
-Nicole использует blood.py для:
+Field4 использует blood.py для:
 - Прямого управления памятью
 - Контроля системных процессов  
 - Запуска C скриптов в трансформерах
