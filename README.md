@@ -35,10 +35,6 @@ ariannamethod/
 │   └── AriannaMethodApp/             # Android source tree, builds, and technical README
 ├── consilium_creation.md             # Autonomous GitHub scouting + consilium mission (#5)
 ├── genesis_adaptation.md             # Genesis-1 adaptation blueprint from Perplexity × Claude
-├── TELEGRAM_X_FORK_PLAN.md           # Telegram-X divergence manifesto
-├── TELEGRAM_X_INTEGRATION_GUIDE.md   # Wiring the fork back into Arianna Method
-├── TELEGRAM_X_PHASE1_COMPLETE.md     # Status log of fork milestones
-├── TELEGRAM_X_STATUS.md              # Rolling report on multi-part message system
 ├── FIELD_INTEGRATION_REPORT.md       # Chronicle of Field ↔ Termux ↔ APK fusion
 ├── SESSION_SUMMARY.md                # Daily resonance digest + operational memory
 ├── termux/                           # Termux launch scripts
