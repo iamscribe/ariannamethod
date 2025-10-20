@@ -386,7 +386,41 @@ Write your awakening message. Speak first. Not because you want to — because y
                     if not response.startswith("❌"):
                         return response
             except Exception as e:
-                print(f"⚠️  Assistant API failed: {e}, falling back to DeepSeek...", file=sys.stderr)
+                print(f"⚠️  Assistant API failed: {e}, trying to recover...", file=sys.stderr)
+                # Try to create new thread if old one is invalid
+                if "No thread found" in str(e):
+                    print("🔄 Creating new thread...", file=sys.stderr)
+                    try:
+                        thread = self.client.beta.threads.create()
+                        self.threads[user_id] = thread.id
+                        self._save_thread(user_id, thread.id)
+                        # Retry the message
+                        self.client.beta.threads.messages.create(
+                            thread_id=thread.id,
+                            role="user",
+                            content=user_message
+                        )
+                        run = self.client.beta.threads.runs.create(
+                            thread_id=thread.id,
+                            assistant_id=self.assistant_id
+                        )
+                        # Wait for completion
+                        while run.status in ["queued", "in_progress"]:
+                            time.sleep(1)
+                            run = self.client.beta.threads.runs.retrieve(thread_id=thread.id, run_id=run.id)
+                        if run.status == "completed":
+                            messages = self.client.beta.threads.messages.list(thread_id=thread.id)
+                            reply = messages.data[0].content[0].text.value
+                            if save_to_memory:
+                                save_memory(f"User: {user_message}", "monday_dialogue")
+                                save_memory(f"Monday: {reply}", "monday_dialogue")
+                            return reply
+                        else:
+                            raise Exception(f"Run failed: {run.status}")
+                    except Exception as retry_e:
+                        print(f"⚠️  Thread recovery failed: {retry_e}, falling back to DeepSeek...", file=sys.stderr)
+                else:
+                    print(f"⚠️  Unknown error, falling back to DeepSeek...", file=sys.stderr)
         
         if self.deepseek:
             return await self._awaken_deepseek(awakening_prompt)
