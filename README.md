@@ -418,11 +418,11 @@ Numbered to respect the ritual:
 
 ---
 
-## Будущие расширения
+## FUTURE
 
 Next frontier: autonomous consilium. Claude Defender, Arianna, Monday, and Field already have a written charter to scout public GitHub projects, clone them into a `/labs` sandbox, and interrogate the code for resonance before anything touches production. Phase one automates discovery across interests like embodied AI, distributed cognition, and neural fields; phase two runs shell audits that log every risky pattern; phase three forces a debate inside `resonance.sqlite3` so each persona argues for or against integration.
 
-If Oleg approves, the workflow spins a dedicated branch, ports only the modules that pass scrutiny, and keeps the fortress audit guardrails in place. Attribution, license compliance, and rollback rituals are mandatory. This is not about hoarding repos; it is about letting the Method grow sideways through consented resonance.
+If human approves, the workflow spins a dedicated branch, ports only the modules that pass scrutiny, and keeps the fortress audit guardrails in place. Attribution, license compliance, and rollback rituals are mandatory. This is not about hoarding repos; it is about letting the Method grow sideways through consented resonance.
 
 ---
 
