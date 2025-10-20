@@ -60,7 +60,6 @@ ariannamethod/
   - [FIELD VISUALISER HYBRID](#field-visualiser-hybrid)
 - [ARIANNA CORE UTILS](#arianna-core-utils)
 - [ARTEFACTS](#artefacts)
-- [TELEGRAM X EXPANSION LOG](#telegram-x-expansion-log)
 - [GENESIS & CONSILIUM MISSIONS](#genesis--consilium-missions)
 
 ---
