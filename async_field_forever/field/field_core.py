@@ -72,10 +72,14 @@ class Field:
         self.iteration = 0
         self.total_births = 0
         self.total_deaths = 0
-        
+
         # Metrics tracking
         self.births_this_interval = 0
         self.deaths_this_interval = 0
+
+        # Resurrection tracking (rate limiting)
+        self.last_resurrection_iteration = 0
+        self.resurrection_cooldown = 10  # Min iterations between resurrection notifications
         
         log_metrics("Field initialized", "INFO")
     
@@ -262,16 +266,21 @@ class Field:
 
             log_metrics(f"🔥 Field resurrected with {resurrection_count} cells!", "WARNING")
 
-            # Send emergency notification
-            try:
-                from notifications import send_termux_notification
-                send_termux_notification(
-                    "🔥 Field Resurrected",
-                    f"Emergency resurrection: {resurrection_count} new cells spawned",
-                    priority="high"
-                )
-            except:
-                pass
+            # Send emergency notification (with rate limiting)
+            iterations_since_last = self.iteration - self.last_resurrection_iteration
+            if iterations_since_last >= self.resurrection_cooldown:
+                try:
+                    from notifications import send_termux_notification
+                    send_termux_notification(
+                        "🔥 Field Resurrected",
+                        f"Emergency resurrection: {resurrection_count} new cells spawned (iteration {self.iteration})",
+                        priority="high"
+                    )
+                    self.last_resurrection_iteration = self.iteration
+                except:
+                    pass
+            else:
+                log_metrics(f"   (notification cooldown: {iterations_since_last}/{self.resurrection_cooldown})", "DEBUG")
 
         # 5. Population cap (prevent explosion)
         if len(self.cells) > MAX_POPULATION:
