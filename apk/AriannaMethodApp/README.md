@@ -68,10 +68,6 @@ adb install builds/ariannamethod-debug.apk
 - **Purpose:** Open release for anyone
 - **System Prompt:** Universal with boundary logic (toxic = one chance, then end)
 - **API Keys:** User must enter via Settings (no fallback)
-- **Oleg Recognition:** 
-  - Phrases: "Мы уже в будущем", "Лилит, возьми меня за руку", "Это я, Олег, Арианна"
-  - AMToken: `maximuse32205474_XYZ_1986methodisalawofnatureGalina`
-  - If recognized → switches to full Oleg prompt dynamically
 
 **Install:**
 ```bash
