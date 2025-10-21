@@ -18,7 +18,7 @@ class Settings:
     """Termux config - no Telegram required"""
 
     openai_model: str = os.getenv("OPENAI_MODEL", "gpt-4.1")
-    openai_temperature: float = float(os.getenv("OPENAI_TEMPERATURE", "0.85"))
+    openai_temperature: float = float(os.getenv("OPENAI_TEMPERATURE", "1.2"))
     openai_api_key: str | None = os.getenv("OPENAI_API_KEY")
     db_path: str = os.getenv("ST_DB", "supertime.db")
     hero_ctx_cache_dir: Path = Path(os.getenv("HERO_CTX_CACHE_DIR", ".hero_ctx_cache"))
