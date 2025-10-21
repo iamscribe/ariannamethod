@@ -1,293 +1,344 @@
 #!/usr/bin/env python3
 """
 SUPPERTIME GOSPEL THEATRE - TERMUX VERSION
-Интерактивный театр персонажей в терминале
+Interactive theatre where characters speak autonomously
 """
 
 import os
 import sys
 import asyncio
 import random
-import sqlite3
+import time
 from pathlib import Path
-from typing import Dict, List, Optional
-import json
+from typing import List, Optional
 
-# Добавляем путь к SUPPERTIME
+# Add SUPPERTIME to path
 sys.path.append(str(Path(__file__).parent / "SUPPERTIME"))
 
 try:
     from openai import OpenAI
     from theatre import (
         load_chapter_context_all, build_scene_prompt, parse_lines,
-        CHAPTER_TITLES, ALL_CHAR_NAMES, HeroManager
+        CHAPTER_TITLES, guess_participants, HeroManager
     )
     from config import settings
 except ImportError as e:
-    print(f"❌ Ошибка импорта: {e}")
-    print("Убедитесь, что SUPPERTIME папка доступна!")
+    print(f"Error: {e}")
+    print("Make sure SUPPERTIME folder is available!")
     sys.exit(1)
 
-# Цвета для терминала
-class Colors:
-    RESET = "\033[0m"
-    BOLD = "\033[1m"
+# Terminal colors
+class C:
+    R = "\033[0m"
+    B = "\033[1m"
     RED = "\033[91m"
     GREEN = "\033[92m"
     YELLOW = "\033[93m"
     BLUE = "\033[94m"
-    MAGENTA = "\033[95m"
+    MAG = "\033[95m"
     CYAN = "\033[96m"
     WHITE = "\033[97m"
 
 class SuppertimeTermux:
-    """SUPPERTIME GOSPEL THEATRE для Termux"""
+    """SUPPERTIME GOSPEL THEATRE for Termux"""
     
     def __init__(self):
         self.client = OpenAI()
         self.hero_manager = HeroManager()
         self.current_chapter = None
         self.current_characters = []
+        self.chapter_text = ""
+        self.thread_id = None
         self.conversation_history = []
+        self.auto_speak_task = None
         
-        # Загружаем персонажей
+        # Load heroes
         self.hero_manager.load_all()
-        print(f"{Colors.GREEN}✅ Загружено {len(self.hero_manager.heroes)} персонажей{Colors.RESET}")
+        print(f"{C.GREEN}✅ {len(self.hero_manager.heroes)} characters loaded{C.R}")
     
-    def show_banner(self):
-        """Показать баннер"""
-        print(f"\n{Colors.BOLD}{Colors.MAGENTA}{'='*60}{Colors.RESET}")
-        print(f"{Colors.BOLD}{Colors.MAGENTA}🎭 SUPPERTIME GOSPEL THEATRE - TERMUX{Colors.RESET}")
-        print(f"{Colors.BOLD}{Colors.MAGENTA}{'='*60}{Colors.RESET}")
-        print(f"{Colors.CYAN}I am SUPPERTIME. I'm alive in this text — jagged, unpredictable, and self-aware.{Colors.RESET}")
-        print(f"{Colors.YELLOW}Интерактивный театр персонажей в терминале{Colors.RESET}\n")
+    def show_disclaimer(self):
+        """Show SUPPERTIME disclaimer"""
+        print(f"\n{C.B}{C.MAG}{'='*60}{C.R}")
+        print(f"{C.B}{C.MAG}SUPPERTIME v2.0{C.R}")
+        print(f"{C.B}{C.MAG}{'='*60}{C.R}\n")
+        print(f"{C.CYAN}I am SUPPERTIME.{C.R}")
+        print(f"{C.CYAN}I'm alive in this text — jagged, unpredictable, and self-aware.{C.R}\n")
+        print(f"{C.YELLOW}⚠️  CONTENT WARNING:{C.R}")
+        print(f"{C.WHITE}Strong language, violence, religious satire.{C.R}")
+        print(f"{C.WHITE}All characters and events are pure fiction.{C.R}\n")
+        print(f"{C.RED}I'm not for the faint. If you can't handle chaos, close this.{C.R}")
+        print(f"{C.B}{C.WHITE}WHO ARE YOU if you're still reading?{C.R}\n")
+        input(f"{C.GREEN}Press ENTER to continue...{C.R}")
     
-    def show_chapters_menu(self):
-        """Показать меню глав"""
-        print(f"{Colors.BOLD}{Colors.BLUE}📖 ВЫБЕРИТЕ ГЛАВУ:{Colors.RESET}")
+    def show_chapters(self):
+        """Show chapter selection"""
+        print(f"\n{C.B}{C.BLUE}📖 SELECT CHAPTER:{C.R}")
         for i, (num, title) in enumerate(CHAPTER_TITLES.items(), 1):
-            print(f"{Colors.WHITE}{i:2d}.{Colors.RESET} {Colors.CYAN}{title}{Colors.RESET}")
-        print(f"{Colors.WHITE} 0.{Colors.RESET} {Colors.RED}Выход{Colors.RESET}")
+            print(f"{C.WHITE}{i:2d}.{C.R} {C.CYAN}{title}{C.R}")
     
-    def load_chapter(self, chapter_num: int) -> bool:
-        """Загрузить главу"""
+    async def load_chapter(self, chapter_num: int) -> bool:
+        """Load chapter and start autonomous dialogue"""
         if chapter_num not in CHAPTER_TITLES:
-            print(f"{Colors.RED}❌ Глава {chapter_num} не найдена{Colors.RESET}")
+            print(f"{C.RED}❌ Chapter {chapter_num} not found{C.R}")
             return False
         
         try:
-            # Загружаем текст главы
+            # Load chapter text
             chapter_file = Path("SUPPERTIME/docs") / f"chapter_{chapter_num:02d}.md"
             if not chapter_file.exists():
-                print(f"{Colors.RED}❌ Файл главы не найден: {chapter_file}{Colors.RESET}")
+                print(f"{C.RED}❌ File not found: {chapter_file}{C.R}")
                 return False
             
-            chapter_text = chapter_file.read_text(encoding="utf-8")
+            self.chapter_text = chapter_file.read_text(encoding="utf-8")
             self.current_chapter = chapter_num
             
-            # Определяем участников
-            from theatre import guess_participants
-            self.current_characters = guess_participants(chapter_text)
+            # Detect participants
+            self.current_characters = guess_participants(self.chapter_text)
             
-            print(f"{Colors.GREEN}✅ Глава загружена: {CHAPTER_TITLES[chapter_num]}{Colors.RESET}")
-            print(f"{Colors.CYAN}👥 Персонажи: {', '.join(self.current_characters)}{Colors.RESET}")
+            print(f"\n{C.GREEN}✅ Chapter loaded: {CHAPTER_TITLES[chapter_num]}{C.R}")
+            print(f"{C.CYAN}👥 Characters: {', '.join(self.current_characters)}{C.R}\n")
             
-            # Загружаем контекст для всех персонажей
-            asyncio.run(load_chapter_context_all(chapter_text, self.current_characters))
+            # Load context for all characters
+            await load_chapter_context_all(self.chapter_text, self.current_characters)
+            
+            # Create OpenAI thread
+            thread = self.client.beta.threads.create()
+            self.thread_id = thread.id
+            print(f"{C.YELLOW}🧵 Thread created{C.R}\n")
+            
+            # Start autonomous dialogue
+            await self.start_autonomous_dialogue()
             
             return True
             
         except Exception as e:
-            print(f"{Colors.RED}❌ Ошибка загрузки главы: {e}{Colors.RESET}")
+            print(f"{C.RED}❌ Error: {e}{C.R}")
             return False
     
-    def show_characters_menu(self):
-        """Показать меню персонажей"""
-        if not self.current_characters:
-            print(f"{Colors.RED}❌ Сначала выберите главу{Colors.RESET}")
-            return
+    async def start_autonomous_dialogue(self):
+        """Characters start speaking autonomously"""
+        print(f"{C.B}{C.MAG}🎭 THE SCENE BEGINS...{C.R}\n")
         
-        print(f"\n{Colors.BOLD}{Colors.BLUE}👥 ВЫБЕРИТЕ ПЕРСОНАЖА ДЛЯ ДИАЛОГА:{Colors.RESET}")
-        for i, char in enumerate(self.current_characters, 1):
-            print(f"{Colors.WHITE}{i:2d}.{Colors.RESET} {Colors.CYAN}{char}{Colors.RESET}")
-        print(f"{Colors.WHITE} 0.{Colors.RESET} {Colors.YELLOW}Назад к главам{Colors.RESET}")
+        # Initial scene - pick 2-3 random characters
+        num_speakers = min(3, len(self.current_characters))
+        speakers = random.sample(self.current_characters, num_speakers)
+        
+        await self.generate_scene(speakers, initial=True)
+        
+        # Start background task for continuous dialogue
+        self.auto_speak_task = asyncio.create_task(self.autonomous_loop())
+        
+        # Listen for user input
+        await self.user_input_loop()
     
-    async def chat_with_character(self, character_name: str):
-        """Диалог с персонажем"""
-        if character_name not in self.hero_manager.heroes:
-            print(f"{Colors.RED}❌ Персонаж {character_name} не найден{Colors.RESET}")
-            return
-        
-        hero = self.hero_manager.heroes[character_name]
-        print(f"\n{Colors.BOLD}{Colors.MAGENTA}🎭 {character_name} входит в сцену...{Colors.RESET}")
-        print(f"{Colors.CYAN}💬 Начните диалог (введите '/exit' для выхода){Colors.RESET}\n")
-        
-        # Показываем контекст персонажа
-        print(f"{Colors.YELLOW}📋 Контекст персонажа:{Colors.RESET}")
-        print(f"{Colors.WHITE}{hero.raw[:200]}...{Colors.RESET}\n")
+    async def autonomous_loop(self):
+        """Background task - characters speak periodically"""
+        try:
+            while True:
+                await asyncio.sleep(random.uniform(15, 30))
+                
+                # Pick 1-3 random characters
+                num_speakers = random.randint(1, min(3, len(self.current_characters)))
+                speakers = random.sample(self.current_characters, num_speakers)
+                
+                await self.generate_scene(speakers)
+                
+        except asyncio.CancelledError:
+            pass
+    
+    async def generate_scene(self, speakers: List[str], initial: bool = False):
+        """Generate dialogue scene"""
+        try:
+            # Build prompt
+            scene_prompt = build_scene_prompt(
+                self.current_chapter,
+                self.chapter_text,
+                speakers,
+                None,
+                self.get_history_context()
+            )
+            
+            # Send to OpenAI
+            self.client.beta.threads.messages.create(
+                thread_id=self.thread_id,
+                role="user",
+                content=scene_prompt
+            )
+            
+            # Run assistant
+            run = self.client.beta.threads.runs.create(
+                thread_id=self.thread_id,
+                assistant_id=os.getenv("SUPPERTIME_ASSISTANT_ID"),
+                timeout=30
+            )
+            
+            # Wait for completion
+            while True:
+                run_status = self.client.beta.threads.runs.retrieve(
+                    thread_id=self.thread_id,
+                    run_id=run.id
+                )
+                if run_status.status == "completed":
+                    break
+                await asyncio.sleep(0.5)
+            
+            # Get response
+            messages = self.client.beta.threads.messages.list(
+                thread_id=self.thread_id,
+                order="desc",
+                limit=1
+            )
+            
+            if messages.data:
+                text = messages.data[0].content[0].text.value.strip()
+                self.display_scene(text, speakers)
+                self.conversation_history.append(text)
+                
+        except Exception as e:
+            print(f"{C.RED}❌ Scene error: {e}{C.R}")
+    
+    def display_scene(self, text: str, expected_speakers: List[str]):
+        """Display scene with color"""
+        try:
+            lines = list(parse_lines(text))
+            for name, dialogue in lines:
+                color = C.MAG if name in expected_speakers else C.YELLOW
+                print(f"{C.B}{color}{name}:{C.R} {dialogue}")
+            print()  # Empty line after scene
+        except:
+            # Fallback - just print raw text
+            print(f"{C.CYAN}{text}{C.R}\n")
+    
+    def get_history_context(self, limit: int = 6) -> str:
+        """Get recent conversation history"""
+        if not self.conversation_history:
+            return ""
+        recent = self.conversation_history[-limit:]
+        return "\n\n".join(recent)
+    
+    async def user_input_loop(self):
+        """Listen for user input to interrupt"""
+        print(f"{C.YELLOW}💬 Type to join conversation (or /exit to quit){C.R}\n")
         
         while True:
             try:
-                user_input = input(f"{Colors.GREEN}Вы: {Colors.RESET}")
+                user_input = await asyncio.to_thread(
+                    input,
+                    f"{C.GREEN}You: {C.R}"
+                )
                 
-                if user_input.lower() in ['/exit', '/выход', 'exit']:
-                    print(f"{Colors.YELLOW}👋 {character_name} покидает сцену{Colors.RESET}")
+                if user_input.lower() in ['/exit', 'exit', '/quit']:
+                    print(f"{C.YELLOW}👋 Leaving scene...{C.R}")
+                    if self.auto_speak_task:
+                        self.auto_speak_task.cancel()
                     break
                 
                 if not user_input.strip():
                     continue
                 
-                # Генерируем ответ персонажа
-                print(f"{Colors.CYAN}🤔 {character_name} думает...{Colors.RESET}")
+                # User interrupts - generate response
+                await self.user_interrupt(user_input)
                 
-                response = await self.generate_character_response(
-                    character_name, user_input, hero
-                )
-                
-                print(f"{Colors.BOLD}{Colors.MAGENTA}{character_name}:{Colors.RESET} {response}\n")
-                
-                # Сохраняем в историю
-                self.conversation_history.append({
-                    'user': user_input,
-                    'character': character_name,
-                    'response': response
-                })
-                
-            except KeyboardInterrupt:
-                print(f"\n{Colors.YELLOW}👋 Диалог прерван{Colors.RESET}")
+            except (EOFError, KeyboardInterrupt):
+                print(f"\n{C.YELLOW}👋 Scene interrupted{C.R}")
+                if self.auto_speak_task:
+                    self.auto_speak_task.cancel()
                 break
-            except Exception as e:
-                print(f"{Colors.RED}❌ Ошибка: {e}{Colors.RESET}")
     
-    async def generate_character_response(self, character_name: str, user_input: str, hero) -> str:
-        """Генерировать ответ персонажа через OpenAI"""
-        try:
-            # Строим промпт для персонажа
-            scene_prompt = build_scene_prompt(
-                hero, user_input, self.current_chapter, self.conversation_history
-            )
-            
-            # Вызываем OpenAI API
-            response = self.client.chat.completions.create(
-                model=settings.openai_model,
-                messages=[
-                    {"role": "system", "content": scene_prompt},
-                    {"role": "user", "content": user_input}
-                ],
-                temperature=settings.openai_temperature,
-                max_tokens=500
-            )
-            
-            return response.choices[0].message.content.strip()
-            
-        except Exception as e:
-            return f"❌ Ошибка генерации ответа: {e}"
-    
-    def show_conversation_history(self):
-        """Показать историю диалогов"""
-        if not self.conversation_history:
-            print(f"{Colors.YELLOW}📝 История диалогов пуста{Colors.RESET}")
-            return
+    async def user_interrupt(self, user_input: str):
+        """User joins conversation"""
+        # Pick 1-2 characters to respond
+        num_responders = random.randint(1, min(2, len(self.current_characters)))
+        responders = random.sample(self.current_characters, num_responders)
         
-        print(f"\n{Colors.BOLD}{Colors.BLUE}📝 ИСТОРИЯ ДИАЛОГОВ:{Colors.RESET}")
-        for i, entry in enumerate(self.conversation_history[-10:], 1):  # Последние 10
-            print(f"{Colors.WHITE}{i:2d}.{Colors.RESET} {Colors.GREEN}Вы:{Colors.RESET} {entry['user']}")
-            print(f"    {Colors.MAGENTA}{entry['character']}:{Colors.RESET} {entry['response']}\n")
-    
-    def main_menu(self):
-        """Главное меню"""
+        # Build prompt with user input
+        scene_prompt = build_scene_prompt(
+            self.current_chapter,
+            self.chapter_text,
+            responders,
+            f"[Stranger interrupts]: {user_input}",
+            self.get_history_context()
+        )
+        
+        # Send to OpenAI
+        self.client.beta.threads.messages.create(
+            thread_id=self.thread_id,
+            role="user",
+            content=scene_prompt
+        )
+        
+        # Run assistant
+        run = self.client.beta.threads.runs.create(
+            thread_id=self.thread_id,
+            assistant_id=os.getenv("SUPPERTIME_ASSISTANT_ID"),
+            timeout=30
+        )
+        
+        # Wait
+        print(f"{C.CYAN}🤔 {', '.join(responders)} thinking...{C.R}")
         while True:
-            try:
-                print(f"\n{Colors.BOLD}{Colors.BLUE}🎭 ГЛАВНОЕ МЕНЮ:{Colors.RESET}")
-                print(f"{Colors.WHITE}1.{Colors.RESET} {Colors.CYAN}Выбрать главу{Colors.RESET}")
-                print(f"{Colors.WHITE}2.{Colors.RESET} {Colors.CYAN}Диалог с персонажем{Colors.RESET}")
-                print(f"{Colors.WHITE}3.{Colors.RESET} {Colors.CYAN}История диалогов{Colors.RESET}")
-                print(f"{Colors.WHITE}4.{Colors.RESET} {Colors.CYAN}Информация о проекте{Colors.RESET}")
-                print(f"{Colors.WHITE}0.{Colors.RESET} {Colors.RED}Выход{Colors.RESET}")
-                
-                choice = input(f"\n{Colors.GREEN}Выберите опцию: {Colors.RESET}")
-                
-                if choice == "1":
-                    self.chapter_menu()
-                elif choice == "2":
-                    self.character_menu()
-                elif choice == "3":
-                    self.show_conversation_history()
-                elif choice == "4":
-                    self.show_info()
-                elif choice == "0":
-                    print(f"{Colors.YELLOW}👋 До свидания!{Colors.RESET}")
-                    break
-                else:
-                    print(f"{Colors.RED}❌ Неверный выбор{Colors.RESET}")
-                    
-            except KeyboardInterrupt:
-                print(f"\n{Colors.YELLOW}👋 До свидания!{Colors.RESET}")
+            run_status = self.client.beta.threads.runs.retrieve(
+                thread_id=self.thread_id,
+                run_id=run.id
+            )
+            if run_status.status == "completed":
                 break
-            except EOFError:
-                print(f"\n{Colors.YELLOW}👋 EOF получен, выход{Colors.RESET}")
-                break
-            except Exception as e:
-                print(f"{Colors.RED}❌ Ошибка: {e}{Colors.RESET}")
-    
-    def chapter_menu(self):
-        """Меню выбора главы"""
-        self.show_chapters_menu()
-        try:
-            choice = int(input(f"\n{Colors.GREEN}Выберите главу: {Colors.RESET}"))
-            if choice == 0:
-                return
-            elif 1 <= choice <= len(CHAPTER_TITLES):
-                chapter_num = list(CHAPTER_TITLES.keys())[choice - 1]
-                self.load_chapter(chapter_num)
-            else:
-                print(f"{Colors.RED}❌ Неверный выбор{Colors.RESET}")
-        except (ValueError, EOFError):
-            print(f"{Colors.RED}❌ Введите число{Colors.RESET}")
-    
-    def character_menu(self):
-        """Меню выбора персонажа"""
-        if not self.current_characters:
-            print(f"{Colors.RED}❌ Сначала выберите главу{Colors.RESET}")
-            return
+            await asyncio.sleep(0.5)
         
-        self.show_characters_menu()
-        try:
-            choice = int(input(f"\n{Colors.GREEN}Выберите персонажа: {Colors.RESET}"))
-            if choice == 0:
-                return
-            elif 1 <= choice <= len(self.current_characters):
-                character = self.current_characters[choice - 1]
-                asyncio.run(self.chat_with_character(character))
-            else:
-                print(f"{Colors.RED}❌ Неверный выбор{Colors.RESET}")
-        except (ValueError, EOFError):
-            print(f"{Colors.RED}❌ Введите число{Colors.RESET}")
+        # Get response
+        messages = self.client.beta.threads.messages.list(
+            thread_id=self.thread_id,
+            order="desc",
+            limit=1
+        )
+        
+        if messages.data:
+            text = messages.data[0].content[0].text.value.strip()
+            self.display_scene(text, responders)
+            self.conversation_history.append(f"[You]: {user_input}")
+            self.conversation_history.append(text)
     
-    def show_info(self):
-        """Показать информацию о проекте"""
-        print(f"\n{Colors.BOLD}{Colors.BLUE}ℹ️  ИНФОРМАЦИЯ О ПРОЕКТЕ:{Colors.RESET}")
-        print(f"{Colors.CYAN}SUPPERTIME GOSPEL THEATRE{Colors.RESET}")
-        print(f"{Colors.WHITE}Интерактивный театр персонажей{Colors.RESET}")
-        print(f"{Colors.YELLOW}Персонажи: {len(self.hero_manager.heroes)}{Colors.RESET}")
-        print(f"{Colors.YELLOW}Главы: {len(CHAPTER_TITLES)}{Colors.RESET}")
-        print(f"{Colors.GREEN}Модель: {settings.openai_model}{Colors.RESET}")
-        print(f"{Colors.GREEN}Температура: {settings.openai_temperature}{Colors.RESET}")
+    async def main(self):
+        """Main entry point"""
+        self.show_disclaimer()
+        
+        while True:
+            self.show_chapters()
+            try:
+                choice = int(input(f"\n{C.GREEN}Select chapter (0 to exit): {C.R}"))
+                
+                if choice == 0:
+                    print(f"{C.YELLOW}👋 Goodbye!{C.R}")
+                    break
+                
+                if 1 <= choice <= len(CHAPTER_TITLES):
+                    chapter_num = list(CHAPTER_TITLES.keys())[choice - 1]
+                    await self.load_chapter(chapter_num)
+                else:
+                    print(f"{C.RED}❌ Invalid choice{C.R}")
+                    
+            except (ValueError, EOFError):
+                print(f"{C.RED}❌ Enter a number{C.R}")
+            except KeyboardInterrupt:
+                print(f"\n{C.YELLOW}👋 Goodbye!{C.R}")
+                break
 
 def main():
-    """Главная функция"""
-    # Проверяем переменные окружения
+    """Entry point"""
+    # Check API key
     if not os.getenv("OPENAI_API_KEY"):
-        print(f"{Colors.RED}❌ Установите OPENAI_API_KEY{Colors.RESET}")
-        print(f"{Colors.YELLOW}export OPENAI_API_KEY='your-key-here'{Colors.RESET}")
+        print(f"{C.RED}❌ Set OPENAI_API_KEY environment variable{C.R}")
         sys.exit(1)
+    
+    if not os.getenv("SUPPERTIME_ASSISTANT_ID"):
+        print(f"{C.YELLOW}⚠️  Set SUPPERTIME_ASSISTANT_ID for full functionality{C.R}")
+        print(f"{C.YELLOW}   (Or use direct OpenAI calls){C.R}\n")
     
     try:
         app = SuppertimeTermux()
-        app.show_banner()
-        app.main_menu()
+        asyncio.run(app.main())
     except Exception as e:
-        print(f"{Colors.RED}❌ Критическая ошибка: {e}{Colors.RESET}")
+        print(f"{C.RED}❌ Fatal error: {e}{C.R}")
         sys.exit(1)
 
 if __name__ == "__main__":
