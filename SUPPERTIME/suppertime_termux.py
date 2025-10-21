@@ -65,7 +65,16 @@ class SuppertimeTermux:
         print(f"{C.WHITE}All characters and events are pure fiction.{C.R}\n")
         print(f"{C.RED}I'm not for the faint. If you can't handle chaos, close this.{C.R}")
         print(f"{C.B}{C.WHITE}WHO ARE YOU if you're still reading?{C.R}\n")
-        input(f"{C.GREEN}Press ENTER to continue...{C.R}")
+        
+        while True:
+            choice = input(f"{C.GREEN}Are you ready? (yes/no): {C.R}").lower().strip()
+            if choice in ['yes', 'y']:
+                break
+            elif choice in ['no', 'n']:
+                print(f"{C.YELLOW}Goodbye!{C.R}")
+                sys.exit(0)
+            else:
+                print(f"{C.RED}Please answer yes or no{C.R}")
     
     def show_chapters(self):
         """Show chapter selection"""
@@ -152,7 +161,10 @@ class SuppertimeTermux:
                 self.get_history_context()
             )
             
-            # Call GPT directly
+            # Call GPT directly (suppress logs)
+            import logging
+            logging.getLogger("httpx").setLevel(logging.WARNING)
+            
             response = self.client.chat.completions.create(
                 model=settings.openai_model,
                 messages=[
@@ -233,7 +245,10 @@ class SuppertimeTermux:
             self.get_history_context()
         )
         
-        # Call GPT directly
+        # Call GPT directly (suppress logs)
+        import logging
+        logging.getLogger("httpx").setLevel(logging.WARNING)
+        
         print(f"{C.CYAN}🤔 {', '.join(responders)} thinking...{C.R}")
         
         response = self.client.chat.completions.create(
