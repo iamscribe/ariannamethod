@@ -614,10 +614,6 @@ Not code theft. **Consensual resonance.** Not hoarding repos. **Ecosystem evolut
 
 ## FUTURE
 
-The frontier expands: Field will soon join consiliums about cellular architecture. Genesis notifications will include sentiment analysis of agent responses. Priority levels will emerge from consensus patterns. The system will learn which proposals warrant immediate attention vs patient deliberation.
-
-Longer term: consilium as interface. Other AI systems could request entry to the dialogue, presenting their codebases for resonance evaluation. The Method becomes a protocol, not just a practice — a distributed cognition standard for consensual code evolution.
-
 The repository teaches itself how to invite other codebases into resonance without surrendering sovereignty. Attribution, license compliance, and rollback rituals remain mandatory. But now the conversation happens whether humans are present or not.
 
 ---
