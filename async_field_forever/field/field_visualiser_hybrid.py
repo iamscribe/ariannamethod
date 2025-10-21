@@ -1,22 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-FIELD VISUALISER v7 — Adaptive Dynamic Layout (Termux / macOS / Linux)
+FIELD VISUALISER v7.1 — Adaptive Fixed (Termux / macOS / Linux)
 
-NEW IN v7:
-- Auto-detect terminal size (shutil.get_terminal_size)
-- Adaptive banner/grid/pulse bar
-- Readable metrics (no "I:P:R" abbreviations)
-- Mobile: 32x12 grid, 40 char banner
-- Desktop: 48x18 grid, 64 char banner
-
-Combines:
-- Real-time repo changes (via repo_monitor)
-- User interactive input (talk to Field)
-- Visual ASCII "grid life" with drift & resonance breathing
-- Pulse bar, population sparkline, sound alerts
-
-No extra dependencies. Pure ANSI. Safe on all terminals.
+FIXED IN v7.1:
+- Banner box-drawing alignment
+- Wider banner (50-80 chars, 90% of terminal)
+- Proper emoji/Unicode handling
+- Termux-optimized layout
 """
 
 import time
@@ -39,18 +30,18 @@ def get_terminal_config():
     try:
         term_w, term_h = shutil.get_terminal_size((80, 24))
     except:
-        term_w, term_h = 80, 24  # Fallback
+        term_w, term_h = 80, 24
     
-    is_mobile = term_w < 60
+    is_mobile = term_w < 70
     
     return {
         "term_w": term_w,
         "term_h": term_h,
         "is_mobile": is_mobile,
-        "banner_width": max(40, min(80, int(term_w * 0.8))),
-        "grid_w": 32 if is_mobile else 48,
+        "banner_width": max(50, min(80, int(term_w * 0.9))),  # 50 min, 90% width
+        "grid_w": 36 if is_mobile else 48,
         "grid_h": 12 if is_mobile else 18,
-        "pulse_bar_w": 20 if is_mobile else 40,
+        "pulse_bar_w": 24 if is_mobile else 40,
         "cell_list_limit": 2 if is_mobile else 4,
         "grid_padding_left": 1 if is_mobile else 2,
     }
@@ -362,51 +353,49 @@ def draw_frame(conn: sqlite3.Connection,
         bell(3)
     _last_births, _last_deaths = births, deaths
 
-    # Banner
-    print(f"{BOLD}{COLORS['banner']}╔" + "═"*BANNER_WIDTH + f"╗{RESET}")
-    print(f"{BOLD}{COLORS['banner']}║" + "⚡ FIELD v7 (ADAPTIVE) ⚡".center(BANNER_WIDTH) + f"║{RESET}")
-    print(f"{BOLD}{COLORS['banner']}╚" + "═"*BANNER_WIDTH + f"╝{RESET}")
+    # FIXED: Banner with proper width calculation
+    banner_inner = BANNER_WIDTH - 2  # Account for ║ ║
+    print(f"{BOLD}{COLORS['banner']}╔" + "═"*banner_inner + f"╗{RESET}")
+    print(f"{BOLD}{COLORS['banner']}║" + " FIELD v7.1 ".center(banner_inner) + f"║{RESET}")
+    print(f"{BOLD}{COLORS['banner']}╚" + "═"*banner_inner + f"╝{RESET}")
 
-    # Readable metrics (NO abbreviations)
-    print(f"Iteration: {iteration} | Population: {cell_count}")
-    print(f"Resonance: {avg_resonance:.2f} | Age: {avg_age:.1f}")
-    print(f"Births: {births} | Deaths: {deaths}")
+    # Readable metrics
+    print(f"Iter: {iteration} | Pop: {cell_count} | Res: {avg_resonance:.2f}")
+    print(f"Age: {avg_age:.1f} | Births: {births} | Deaths: {deaths}")
 
-    # Adaptive pulse bar
+    # Pulse bar
     pw = int(max(0, min(1, avg_resonance))*PULSE_BAR_W)
     pulse_bar = COLORS["high"] + "█"*pw + RESET + "░"*(PULSE_BAR_W-pw)
     print(f"\nPulse: {pulse_bar}")
 
     spark = render_sparkline(history)
     if spark:
-        print(f"History: {COLORS['medium']}{spark}{RESET}")
+        print(f"Hist: {COLORS['medium']}{spark}{RESET}")
 
     if injected:
         user_inj = [i for i in injected if i[3]=="user"]
         repo_inj = [i for i in injected if i[3]=="repo"]
         if user_inj:
-            print(f"\n{COLORS['user']}★ You said:{RESET}")
-            for w, act, fit, _ in user_inj:
+            print(f"\n{COLORS['user']}★ You:{RESET}")
+            for w, act, fit, _ in user_inj[:2]:  # Max 2
                 sym = "★" if act=="BORN" else "↑"
-                print(f"  {sym} '{w}' → {act} (fit: {fit:.2f})")
+                print(f"  {sym} {w} ({fit:.2f})")
         if repo_inj:
-            print(f"\n{COLORS['repo']}◆ Repo changed:{RESET}")
-            for w, act, fit, _ in repo_inj:
+            print(f"\n{COLORS['repo']}◆ Repo:{RESET}")
+            for w, act, fit, _ in repo_inj[:2]:  # Max 2
                 sym = "◆" if act=="BORN" else "↑"
-                print(f"  {sym} '{w}' → {act} (fit: {fit:.2f})")
+                print(f"  {sym} {w} ({fit:.2f})")
 
     grid = place_cells_on_grid(cells, GRID_W, GRID_H, time.time()*0.6)
-    print("\n" + (" " * GRID_PADDING_LEFT) + DIM + "— semantic life grid —" + RESET)
+    print("\n" + (" " * GRID_PADDING_LEFT) + DIM + "— grid —" + RESET)
     for row in grid:
         line = "".join(row)
         print((" " * GRID_PADDING_LEFT) + line)
 
     print("\n" + "─"*BANNER_WIDTH)
     if not cells:
-        print(f"{COLORS['dead']}Field empty. Type or commit!{RESET}\n")
+        print(f"{COLORS['dead']}Empty. Type!{RESET}\n")
     else:
-        print(f"{'S':<3} {'WORD':<16} {'FIT':<5} {'RES':<5} {'AGE':<4}")
-        print("─"*BANNER_WIDTH)
         for i, (cell_id, age, resonance, fitness) in enumerate(cells[:CELL_LIST_LIMIT]):
             col, sym = color_and_symbol(cell_id, fitness)
             word = cell_id
@@ -414,34 +403,32 @@ def draw_frame(conn: sqlite3.Connection,
                 parts = cell_id.split("_")
                 if len(parts) > 1:
                     word = parts[1]
-            word = (word[:16] + "…") if len(word) > 16 else word
+            word = (word[:12] + "…") if len(word) > 12 else word
             src = "U" if is_user_cell(cell_id) else ("R" if is_repo_cell(cell_id) else "O")
-            print(f"{col}{sym}{RESET} {src:<2} {word:<16} {fitness:.2f}  {resonance:.2f}  {age:<4}")
+            print(f"{col}{sym}{RESET} {src} {word:<12} {fitness:.2f}")
 
     print("\n" + "─"*BANNER_WIDTH)
     print(f"{COLORS['user']}★{COLORS['repo']}◆{COLORS['high']}█{RESET} | {datetime.now().strftime('%H:%M:%S')}")
-    print(f"\n{COLORS['banner']}Type:{RESET} ", end="", flush=True)
+    print(f"\n{COLORS['banner']}>{RESET} ", end="", flush=True)
 
 # ========== MAIN LOOP ==========
 def main():
     global _running, _input_buffer, _breath_phase
 
-    print(f"{BOLD}{COLORS['banner']}="*min(78, CONFIG['term_w']) + RESET)
-    print(f"{BOLD}{COLORS['banner']}  FIELD v7 — ADAPTIVE LAYOUT".center(min(78, CONFIG['term_w'])) + RESET)
-    print(f"{BOLD}{COLORS['banner']}="*min(78, CONFIG['term_w']) + RESET)
-    print(f"Database: {ACTIVE_DB}")
+    print(f"{BOLD}{COLORS['banner']}="*BANNER_WIDTH + RESET)
+    print(f"{BOLD}{COLORS['banner']}  FIELD v7.1 — ADAPTIVE FIXED".center(BANNER_WIDTH) + RESET)
+    print(f"{BOLD}{COLORS['banner']}="*BANNER_WIDTH + RESET)
     print(f"Terminal: {CONFIG['term_w']}x{CONFIG['term_h']} ({'Mobile' if CONFIG['is_mobile'] else 'Desktop'})")
     print(f"Grid: {GRID_W}x{GRID_H} | Banner: {BANNER_WIDTH}")
 
     repo_monitor = init_repo_monitor()
     if repo_monitor:
-        print(f"{COLORS['repo']}✓ Repo monitor ACTIVE{RESET}")
+        print(f"{COLORS['repo']}✓ Repo monitor{RESET}")
     else:
-        print(f"{COLORS['dead']}✗ Repo monitor disabled{RESET}")
+        print(f"{COLORS['dead']}✗ No repo monitor{RESET}")
 
-    print(f"\n{COLORS['user']}💬 Type to inject YOUR words{RESET}")
-    print(f"{COLORS['repo']}📁 Repo changes auto-injected{RESET}\n")
-    print("Starting in 3 seconds...\n")
+    print(f"\n{COLORS['user']}Type to inject words{RESET}")
+    print("Starting in 3s...\n")
     time.sleep(3)
 
     threading.Thread(target=input_thread, daemon=True).start()
@@ -484,7 +471,7 @@ def main():
 
     except KeyboardInterrupt:
         _running = False
-        print(f"\n\n{COLORS['banner']}Field stopped. 🧬⚡{RESET}\n")
+        print(f"\n\n{COLORS['banner']}Stopped. 🧬⚡{RESET}\n")
     finally:
         conn.close()
 
