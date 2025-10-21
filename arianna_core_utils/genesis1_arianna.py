@@ -203,28 +203,50 @@ def collect_fragments() -> list[str]:
     return collected
 
 
-# ====== TERMUX NOTIFICATION ======
+# ====== TERMUX NOTIFICATION (interactive with full text reveal) ======
 def send_genesis_notification(persona: str, digest: str) -> None:
     """
-    Send Genesis digest via Termux notification.
+    Send Genesis digest via Termux notification with clickable full text reveal.
+
+    On tap: Opens Termux and displays full digest with `cat` or `echo`.
+    This solves the truncation problem - notification is preview, tap for full text.
 
     Args:
         persona: Either "Arianna" or "Monday"
         digest: The generated impressionistic digest
     """
     import subprocess
+    import tempfile
+    import os
 
     title = f"🧬 Genesis-{persona}"
 
     # Truncate for notification display (max ~180 chars)
     preview = digest[:180] + "..." if len(digest) > 180 else digest
 
+    # Write full digest to temp file for on-tap reveal
+    temp_file = f"/data/data/com.termux/files/home/.cache/genesis_{persona.lower()}_latest.txt"
+    os.makedirs(os.path.dirname(temp_file), exist_ok=True)
+
+    with open(temp_file, 'w', encoding='utf-8') as f:
+        f.write(f"🧬 GENESIS-{persona.upper()} Full Digest\n")
+        f.write("=" * 60 + "\n\n")
+        f.write(digest)
+        f.write("\n\n" + "=" * 60 + "\n")
+        f.write(f"Tap notification to view. Feed this to Field via resonance.sqlite3.\n")
+
+    # Action: on tap, cat the full text
+    action_cmd = f"cat {temp_file}"
+
     try:
         subprocess.run([
             "termux-notification",
             "-t", title,
             "-c", preview,
-            "--priority", "low"
+            "--priority", "low",
+            "--action", action_cmd,
+            "--button1", "View Full Text",
+            "--button1-action", action_cmd
         ], check=True, capture_output=True)
     except Exception as e:
         logger.warning(f"Failed to send notification: {e}")
