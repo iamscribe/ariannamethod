@@ -297,7 +297,7 @@ def draw_frame(conn, cells, it:int, pop:int, res:float, age:float, b:int, d:int,
     if cells:
         print()
         head="src  word          fit   res   age"
-        print(" "*left + head); print(" "*left + "-"*len(head))
+        print(" "*left + head); print(" "*left + "-"*line_w)
         for cid, age_c, res_c, fit_c in cells[:min(4,len(cells))]:
             col,sym = color_symbol(cid, fit_c)
             token = token_for_cell(cid)
