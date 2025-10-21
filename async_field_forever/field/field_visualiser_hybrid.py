@@ -253,7 +253,7 @@ def draw_frame(conn, cells, it:int, pop:int, res:float, age:float, b:int, d:int,
 
     W,H = term_size()
     title = "ASYNC FIELD FOREVER (HYBRID) — VISUALISER"
-    line_w = min(50, W-2*H_MARGIN-10)  # Гарантированно короче!
+    line_w = max(50, W-8)  # На 8 символов короче ширины терминала
     left   = center_x(line_w, W)
 
     # layout
@@ -311,7 +311,7 @@ def draw_frame(conn, cells, it:int, pop:int, res:float, age:float, b:int, d:int,
     pad = max(1, line_w - len(legend) - len(clock) - 1)
     print(" "*left + legend + " "*pad + clock)
 
-    print("\n> ", end="", flush=True)
+    print("\n" + " "*left + "> ", end="", flush=True)
 
     # beeps on change
     if b > _last_births: sys.stdout.write("\a")
