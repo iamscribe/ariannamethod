@@ -355,7 +355,7 @@ def draw_frame(conn: sqlite3.Connection,
     _last_births, _last_deaths = births, deaths
 
     # FIXED: Banner with proper width calculation
-    banner_inner = BANNER_WIDTH - 2  # Account for ║ ║
+    banner_inner = BANNER_WIDTH - 4  # Account for ║ ║ + emoji padding
     print(f"{BOLD}{COLORS['banner']}╔" + "═"*banner_inner + f"╗{RESET}")
     print(f"{BOLD}{COLORS['banner']}║" + " FIELD v7.1 ".center(banner_inner) + f"║{RESET}")
     print(f"{BOLD}{COLORS['banner']}╚" + "═"*banner_inner + f"╝{RESET}")
