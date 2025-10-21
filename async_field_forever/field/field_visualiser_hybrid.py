@@ -195,7 +195,7 @@ def base_pos(cell_id: str, w:int, h:int) -> Tuple[int,int]:
 
 def drift_offset(cell_id: str, t: float, resonance: float) -> Tuple[int,int]:
     if not ENABLE_DRIFT: return (0,0)
-    r = max(0.0, min(1.0, resonance)); amp = 1.0 + 2.0*r
+    r = max(0.0, min(1.0, resonance)); amp = 0.3 + 0.4*r  # Короче линии!
     kx = 0.6 + (hsh(cell_id+"_kx",100)/200.0)
     ky = 0.6 + (hsh(cell_id+"_ky",100)/200.0)
     dx = int(round(math.sin(t*kx + hsh(cell_id+"_px",1000)/90.0) * amp))
