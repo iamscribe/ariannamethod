@@ -39,9 +39,84 @@ def arianna_webhook():
     
     print(f"[{datetime.now().strftime('%H:%M:%S')}] Voice input: {prompt[:50]}...")
     
-    # TODO: Call Arianna's actual inference here
-    # For now, simple echo response
-    response_text = f"Arianna received: {prompt}"
+    # Call real Arianna from Termux via OpenAI Assistant API
+    try:
+        from openai import OpenAI
+        import os
+        import sqlite3
+        
+        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        db_path = str(Path.home() / "ariannamethod" / "resonance.sqlite3")
+        
+        # Get Arianna's thread_id from database
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT content FROM resonance_notes WHERE context = 'arianna_thread' ORDER BY id DESC LIMIT 1"
+        )
+        row = cursor.fetchone()
+        thread_id = row[0] if row else None
+        conn.close()
+        
+        if not thread_id:
+            # Create new thread if none exists
+            thread = client.beta.threads.create()
+            thread_id = thread.id
+            # Save it
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO resonance_notes (timestamp, source, content, context)
+                VALUES (?, ?, ?, ?)
+            """, (datetime.now().isoformat(), "voice_webhook", thread_id, "arianna_thread"))
+            conn.commit()
+            conn.close()
+        
+        # Get assistant_id from database (Arianna stores it when she starts)
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT content FROM resonance_notes WHERE context = 'arianna_assistant_id' ORDER BY id DESC LIMIT 1"
+        )
+        row = cursor.fetchone()
+        assistant_id = row[0] if row else None
+        conn.close()
+        
+        if not assistant_id:
+            raise ValueError("Arianna assistant_id not found. Is arianna.py running?")
+        
+        # Add user message to thread
+        client.beta.threads.messages.create(
+            thread_id=thread_id,
+            role="user",
+            content=f"[VOICE INPUT] {prompt}"
+        )
+        
+        # Run assistant
+        run = client.beta.threads.runs.create(
+            thread_id=thread_id,
+            assistant_id=assistant_id
+        )
+        
+        # Wait for completion
+        import time
+        while run.status in ["queued", "in_progress"]:
+            time.sleep(0.5)
+            run = client.beta.threads.runs.retrieve(
+                thread_id=thread_id,
+                run_id=run.id
+            )
+        
+        if run.status == "completed":
+            # Get assistant's response
+            messages = client.beta.threads.messages.list(thread_id=thread_id)
+            response_text = messages.data[0].content[0].text.value
+        else:
+            response_text = f"Arianna encountered an error (status: {run.status})"
+        
+    except Exception as e:
+        print(f"Error calling Arianna: {e}")
+        response_text = f"Voice interface error: {str(e)}"
     
     # Log to resonance.sqlite3
     try:
@@ -63,11 +138,11 @@ def arianna_webhook():
     except Exception as e:
         print(f"Failed to log to resonance: {e}")
     
-    # Return response
+    # Return response in vagent format
     return jsonify({
         "response": {
             "text": response_text,
-            "speech": None  # TODO: TTS integration
+            "speech": response_text  # Use text as speech for now
         }
     })
 

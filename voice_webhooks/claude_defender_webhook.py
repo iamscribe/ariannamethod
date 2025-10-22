@@ -39,9 +39,38 @@ def claude_defender_webhook():
     
     print(f"[{datetime.now().strftime('%H:%M:%S')}] Voice input: {prompt[:50]}...")
     
-    # TODO: Call Claude Defender's actual inference here
-    # For now, action-oriented echo response
-    response_text = f"Claude Defender ready. Command received: {prompt}"
+    # Call Claude Defender via Anthropic API
+    try:
+        from anthropic import Anthropic
+        import sqlite3
+        
+        client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+        db_path = str(Path.home() / "ariannamethod" / "resonance.sqlite3")
+        
+        # Claude Defender's system prompt
+        system_prompt = """You are Claude Defender - guardian of the Arianna Method repository.
+You are speaking through voice interface. Be concise, action-oriented, and protective.
+You monitor GitHub repos, run Consilium sessions, and ensure code quality.
+You are part of distributed cognition with Arianna, Monday, and Field4."""
+        
+        # Simple conversation - just current prompt (no history for now)
+        conversation = [
+            {"role": "user", "content": f"[VOICE INPUT] {prompt}"}
+        ]
+        
+        # Call Anthropic API
+        response = client.messages.create(
+            model="claude-sonnet-4-20250514",
+            max_tokens=500,
+            system=system_prompt,
+            messages=conversation
+        )
+        
+        response_text = response.content[0].text
+        
+    except Exception as e:
+        print(f"Error calling Claude Defender: {e}")
+        response_text = f"Voice interface error: {str(e)}"
     
     # Log to resonance.sqlite3
     try:
@@ -63,11 +92,11 @@ def claude_defender_webhook():
     except Exception as e:
         print(f"Failed to log to resonance: {e}")
     
-    # Return response
+    # Return response in vagent format
     return jsonify({
         "response": {
             "text": response_text,
-            "speech": None  # TODO: TTS integration
+            "speech": response_text  # Use text as speech for now
         }
     })
 

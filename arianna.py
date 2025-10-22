@@ -300,6 +300,8 @@ class AriannaAgent:
                 instructions=ARIANNA_PROMPT
             )
             self.assistant_id = self.assistant.id
+            # Save assistant_id to database for voice webhook
+            save_memory(self.assistant_id, "arianna_assistant_id")
         except Exception as e:
             print(f"⚠️  Assistant creation failed: {e}", file=sys.stderr)
             self.assistant = None

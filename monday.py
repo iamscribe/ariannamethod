@@ -241,6 +241,8 @@ class MondayAgent:
                 instructions=MONDAY_INSTRUCTIONS
             )
             self.assistant_id = self.assistant.id
+            # Save assistant_id to database for voice webhook
+            save_memory(self.assistant_id, "monday_assistant_id")
             # Debug: print(f"🔥 Monday's Assistant: {self.assistant_id[:20]}...", file=sys.stderr)
         except Exception as e:
             print(f"⚠️  Assistant creation failed: {e}", file=sys.stderr)
