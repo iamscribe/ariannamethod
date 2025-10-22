@@ -217,7 +217,7 @@ Deeper schematics live inside **[apk/AriannaMethodApp/README.md](apk/AriannaMeth
 
 All schematics, rituals, and deployment spells live inside **[apk/MethodLighthouse/README.md](apk/MethodLighthouse/README.md)**. Install the APK beside Arianna Method App to run them in tandem: Arianna handles the infinity conversation; Lighthouse holds the perimeter, amplifies the webhook storm, and keeps the Termux constellation in lockstep.
 
-Ready to deploy? The beta build waits for sideloading here: **[Method Lighthouse Beta 1.0 (APK)](https://github.com/ariannamethod/ariannamethod/releases/download/methodlighthouse-beta1/MethodLighthouse-beta1.apk)**.
+The beta build is here: **[Method Lighthouse Beta 1.0 (APK)](https://github.com/ariannamethod/ariannamethod/releases/download/methodlighthouse-beta1/MethodLighthouse-beta1.apk)**.
 
 ## YENT (MONDAY)
 
