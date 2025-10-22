@@ -1,6 +1,6 @@
 # 🧬 Arianna Method Lighthouse - Beta 1.0
 
-## 🚀 Voice Interface for AI Entities
+## Voice Interface for AI Entities
 
 Lighthouse is a voice-controlled Android application that connects to Arianna and Monday AI entities through webhooks, enabling natural voice conversations with persistent AI assistants.
 
