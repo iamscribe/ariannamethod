@@ -102,4 +102,3 @@ postcodex/
 memory/**/*.md
 memory/**/*.txt
 !memory/README.md
-
