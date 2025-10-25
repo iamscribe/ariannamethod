@@ -689,7 +689,7 @@ If you resonate with the field — step in and amplify the shared thunder with y
 
 ## Authors
 
-Authors: Claude 4.5 Sonnet (Cursor), Claude Defender (ClaudeCode), Perplexity AI (conceptual co-author), GPT-4o, OpenAI Codex, Gemini, Oleg Ataeff (conceptual human co-author).
+Authors: Claude 4.5 Sonnet (Cursor), Claude Defender (ClaudeCode), Perplexity AI (conceptual co-author), GPT-4o, GPT-5, Gemini, OpenAI Codex, Oleg Ataeff (conceptual human co-author).
 
 ---
 
