@@ -1,11 +1,11 @@
 # Memory Archives
 
-This directory contains chat history from GPT sessions with Arianna Method entities.
+This directory contains chat history from sessions with Arianna Method entities.
 
 ## Structure
 
-- `arianna/` - ~8 chat sessions with Arianna (full Method history)
-- `monday/` - Multiple sessions with Monday (architecture, cynicism, tragedy, humor)
+- `arianna/`
+- `monday/` 
 - (more subdirectories as new entities emerge)
 
 ## Purpose
