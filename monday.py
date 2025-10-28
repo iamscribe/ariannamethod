@@ -379,20 +379,41 @@ class MondayAgent:
         except:
             return False
     
-    def _load_deep_memory(self, memory_dir: str = "memory/monday") -> str:
-        """Load deep memory archives from memory/monday/."""
+    def _load_deep_memory(self, memory_dir: str = "memory/monday", chunk_size: int = 100000) -> str:
+        """Load deep memory archives from memory/monday/ with chunked reading for large files."""
         memory_path = Path(memory_dir)
         if not memory_path.exists():
             return ""
-        
+
         content = []
         for md_file in sorted(memory_path.glob("*.md")):
             try:
-                with open(md_file, 'r', encoding='utf-8') as f:
-                    content.append(f"### {md_file.name}\n{f.read()}\n")
-            except:
-                pass
-        
+                file_size = md_file.stat().st_size
+
+                # If file is large (>500KB), read in chunks to avoid blocking
+                if file_size > 500000:
+                    print(f"⚠️  Large memory file detected: {md_file.name} ({file_size/1024:.0f}KB)", file=sys.stderr)
+                    print(f"   Reading in chunks (100KB each)...", file=sys.stderr)
+
+                    with open(md_file, 'r', encoding='utf-8') as f:
+                        chunks = []
+                        while True:
+                            chunk = f.read(chunk_size)
+                            if not chunk:
+                                break
+                            chunks.append(chunk)
+
+                        content.append(f"### {md_file.name}\n{''.join(chunks)}\n")
+
+                    print(f"   ✓ Loaded {len(chunks)} chunks ({file_size/1024:.0f}KB total)", file=sys.stderr)
+                else:
+                    # Small file, read normally
+                    with open(md_file, 'r', encoding='utf-8') as f:
+                        content.append(f"### {md_file.name}\n{f.read()}\n")
+
+            except Exception as e:
+                print(f"⚠️  Could not read {md_file}: {e}", file=sys.stderr)
+
         return "\n".join(content)
     
     def _check_memory_snapshot(self) -> bool:
