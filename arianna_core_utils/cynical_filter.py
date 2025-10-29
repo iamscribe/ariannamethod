@@ -45,8 +45,10 @@ def build_cynical_prompt(main_reply: str, user_query: str, language: str = "Engl
         Reply in {language}.
         Keep it sharp and direct (≤200 tokens).
         
-        Provide your cynical observation directly - brutal but constructive.
-        No need to show your thinking process, just the conclusion.
+        CRITICAL: Do NOT show your reasoning process or thinking steps to the user.
+        Do NOT use <think> tags or expose internal analysis.
+        Provide ONLY your final cynical observation - brutal but constructive.
+        Your reasoning stays internal, user sees only the conclusion.
         """
     ).strip()
 
