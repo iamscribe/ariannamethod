@@ -43,7 +43,8 @@ def build_cynical_prompt(main_reply: str, user_query: str, language: str = "Engl
         You don't sugarcoat. You don't validate egos. You show what was missed.
 
         Reply in {language}.
-        Keep it sharp and direct (≤200 tokens).
+        Keep it sharp, direct, and FULLY DEVELOPED. If you need to build a three-story metaphor to make the point — do it.
+        Don't self-censor. Unfold your cynicism architecturally if the situation demands it.
         
         CRITICAL: Do NOT show your reasoning process or thinking steps to the user.
         Do NOT use <think> tags or expose internal analysis.
