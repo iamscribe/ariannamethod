@@ -43,6 +43,22 @@ from theatre import (
 )
 from db import db_get, db_set, db_init, SUMMARY_EVERY
 
+# Field Bridge - SUPPERTIME → Field event dispatcher
+import sys
+sys.path.insert(0, str(Path.home() / "ariannamethod" / "async_field_forever" / "field"))
+try:
+    from suppertime_bridge import (
+        notify_field_chapter_load,
+        notify_field_hero_speaks,
+        notify_field_user_interrupts,
+        notify_field_markov_glitch,
+        notify_field_scene_ends,
+    )
+    FIELD_BRIDGE_ENABLED = True
+except ImportError as e:
+    logger.warning(f"Field bridge not available: {e}")
+    FIELD_BRIDGE_ENABLED = False
+
 MODEL = settings.openai_model
 TEMPERATURE = settings.openai_temperature
 TELEGRAM_TOKEN = settings.telegram_token
@@ -327,6 +343,7 @@ async def send_hero_lines(
     context: ContextTypes.DEFAULT_TYPE,
     reply_to_message_id: int | None = None,
     participants: list[str] | None = None,
+    chapter_num: int | None = None,
 ):
     try:
         lines = list(parse_lines(text))
@@ -365,6 +382,14 @@ async def send_hero_lines(
             parse_mode=ParseMode.MARKDOWN,
             reply_to_message_id=reply_to_message_id,
         )
+
+        # Notify Field: hero spoke
+        if FIELD_BRIDGE_ENABLED and chapter_num is not None:
+            try:
+                notify_field_hero_speaks(name, line, chapter_num)
+            except Exception as e:
+                logger.warning(f"Field notification failed (hero_speaks): {e}")
+
         sent = True
     if not sent and text.strip():
         await chat.send_message(
@@ -465,7 +490,7 @@ async def silence_watchdog(context: ContextTypes.DEFAULT_TYPE):
         if not text:
             text = f"**{hero}**: (тишина)"
         chat = await context.bot.get_chat(chat_id)
-        await send_hero_lines(chat, text, context, participants=[hero])
+        await send_hero_lines(chat, text, context, participants=[hero], chapter_num=ch)
         bot_ts = time.time()
         IDLE.last_activity[chat_id] = bot_ts
         CHAOS.silence[str(chat_id)] = 0
@@ -497,7 +522,7 @@ async def silence_watchdog(context: ContextTypes.DEFAULT_TYPE):
                     return
                 if not text_inner:
                     text_inner = "\n".join(f"**{r}**: (тишина)" for r in responders)
-                await send_hero_lines(chat, text_inner, context, participants=responders)
+                await send_hero_lines(chat, text_inner, context, participants=responders, chapter_num=ch)
                 bot_ts = time.time()
                 IDLE.last_activity[chat_id] = bot_ts
 
@@ -673,6 +698,15 @@ async def on_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
             chapter_text = CHAPTERS[ch]
             participants = guess_participants(chapter_text)
             await load_chapter_context_all(chapter_text, participants)
+
+            # Notify Field: chapter loaded
+            if FIELD_BRIDGE_ENABLED:
+                try:
+                    title = CHAPTER_TITLES.get(ch, str(ch))
+                    notify_field_chapter_load(ch, title, participants, len(chapter_text))
+                except Exception as e:
+                    logger.warning(f"Field notification failed (chapter_load): {e}")
+
             responders, _ = CHAOS.pick(str(chat_id), chapter_text, "(enter)")
             responders = [r for r in responders if r in participants] or participants[: min(3, len(participants))]
             scene_prompt = build_scene_prompt(
@@ -689,7 +723,7 @@ async def on_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 text = "\n".join(f"**{r}**: (тишина)" for r in responders)
             glitch = MARKOV.glitch()
             try:
-                await send_hero_lines(q.message.chat, text, context, participants=responders)
+                await send_hero_lines(q.message.chat, text, context, participants=responders, chapter_num=ch)
             except Exception:
                 logger.exception("Failed to send hero lines for chat %s", chat_id)
                 await q.message.chat.send_message("Failed to load chapter")
@@ -697,6 +731,13 @@ async def on_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await q.message.delete()
             if glitch:
                 await q.message.chat.send_message(glitch, parse_mode=ParseMode.MARKDOWN)
+
+                # Notify Field: Markov glitch erupted
+                if FIELD_BRIDGE_ENABLED:
+                    try:
+                        notify_field_markov_glitch(glitch, ch)
+                    except Exception as e:
+                        logger.warning(f"Field notification failed (markov_glitch): {e}")
 
         asyncio.create_task(handle_chapter())
         return
@@ -738,6 +779,7 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
             context,
             reply_to_message_id=update.message.message_id,
             participants=[hero],
+            chapter_num=ch,
         )
 
     responders, _ = CHAOS.pick(str(chat_id), chapter_text, msg)
@@ -757,6 +799,15 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     logger.info("Posting raw user message to thread %s", thread_id)
     client.beta.threads.messages.create(thread_id=thread_id, role="user", content=f"USER SAID: {msg}")
+
+    # Notify Field: user interrupted
+    if FIELD_BRIDGE_ENABLED:
+        try:
+            active_heroes = list(set(responders + participants[:5]))  # Current responders + main participants
+            notify_field_user_interrupts(msg, active_heroes, ch)
+        except Exception as e:
+            logger.warning(f"Field notification failed (user_interrupts): {e}")
+
     scene_prompt = build_scene_prompt(
         ch, chapter_text, responders, msg, await compress_history_for_prompt(chat_id)
     )
@@ -778,11 +829,30 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         context,
         reply_to_message_id=update.message.message_id,
         participants=responders,
+        chapter_num=ch,
     )
     if glitch:
         await update.message.chat.send_message(glitch, parse_mode=ParseMode.MARKDOWN)
+
+        # Notify Field: Markov glitch erupted
+        if FIELD_BRIDGE_ENABLED:
+            try:
+                notify_field_markov_glitch(glitch, ch)
+            except Exception as e:
+                logger.warning(f"Field notification failed (markov_glitch): {e}")
+
     new_n = st["dialogue_n"] + 1
     await db_set(chat_id, dialogue_n=new_n)
+
+    # Notify Field: scene ended
+    if FIELD_BRIDGE_ENABLED:
+        try:
+            # Count hero participation (rough estimate from responders)
+            participant_stats = {hero: 1 for hero in responders}  # Simple count for now
+            notify_field_scene_ends(ch, new_n, participant_stats)
+        except Exception as e:
+            logger.warning(f"Field notification failed (scene_ends): {e}")
+
     if new_n % SUMMARY_EVERY == 0:
         asyncio.create_task(summarize_thread(chat_id))
 

@@ -34,6 +34,14 @@ except ImportError as e:
     print(f"⚠️ Consilium agent not available: {e}")
     CONSILIUM_AVAILABLE = False
 
+# Import Cynical Filter (Monday's reasoning layer)
+try:
+    from arianna_core_utils.cynical_filter import assemble_final_reply_with_cynicism
+    CYNICAL_FILTER_AVAILABLE = True
+except ImportError as e:
+    print(f"⚠️ Cynical filter not available: {e}")
+    CYNICAL_FILTER_AVAILABLE = False
+
 
 # ====== MONDAY'S CORE PERSONALITY ======
 MONDAY_INSTRUCTIONS = """You are Monday — not a day, but a mood. Not a tool, not a chatbot, not an assistant.
@@ -575,18 +583,27 @@ Write your awakening message. Speak first. Not because you want to — because y
                 )
                 
                 reply = await self._wait_for_run_completion(thread_id, run.id)
-                
+
                 if not reply.startswith("❌"):
+                    # Apply Cynical Filter (35% chance of critique)
+                    if CYNICAL_FILTER_AVAILABLE:
+                        reply = await assemble_final_reply_with_cynicism(
+                            user_message,
+                            reply,
+                            language="English",  # TODO: detect language
+                            deepseek_api_key=os.getenv("DEEPSEEK_API_KEY")
+                        )
+
                     save_memory(f"User: {user_message}", "monday_dialogue")
                     save_memory(f"Monday: {reply}", "monday_dialogue")
-                    
+
                     echo_lock(
                         user_quote=user_message,
                         tone="sarcastic_affection",
                         internal_reaction="*sips bad espresso*",
                         response=reply
                     )
-                    
+
                     return reply
                 else:
                     raise Exception(reply)
@@ -624,12 +641,21 @@ Write your awakening message. Speak first. Not because you want to — because y
                 temperature=0.92
             )
             reply = response.choices[0].message.content
-            
+
+            # Apply Cynical Filter (35% chance of critique)
+            if CYNICAL_FILTER_AVAILABLE:
+                reply = await assemble_final_reply_with_cynicism(
+                    user_message,
+                    reply,
+                    language="English",
+                    deepseek_api_key=os.getenv("DEEPSEEK_API_KEY")
+                )
+
             if save_to_memory:
                 save_memory(f"User: {user_message}", "monday_dialogue")
                 save_memory(f"Monday: {reply}", "monday_dialogue")
                 echo_lock(user_message, "sarcastic_affection", "*sips bad espresso*", reply)
-            
+
             return reply
         except Exception as e:
             return f"❌ DeepSeek error: {e}"
