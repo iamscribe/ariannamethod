@@ -33,6 +33,7 @@ except ImportError:
 try:
     from arianna_core_utils.perplexity_core import perplexity_core_answer, save_research_to_file
     from arianna_core_utils.intuition_filter import assemble_final_reply_with_intuition
+    from arianna_core_utils.complexity import get_complexity_analyzer
     PERPLEXITY_AVAILABLE = True
 except ImportError as e:
     print(f"⚠️ Perplexity modules not available: {e}")
@@ -552,6 +553,7 @@ Write your awakening message. Speak first. This is not politeness — this is as
         """
         Main thinking loop via Assistant API.
         Detects /reasoning and /normal commands.
+        Autonomously triggers deep research based on thought complexity.
         """
         # Check for mode switching commands
         if user_message.strip() in ["/reasoning", "/reasoningon"]:
@@ -561,24 +563,6 @@ Write your awakening message. Speak first. This is not politeness — this is as
         if user_message.strip() in ["/normal", "/reasoningoff"]:
             self.reasoning_mode = False
             return "⚡"
-        
-        # Check for Perplexity Knowledge Core command
-        if user_message.startswith("/research ") and PERPLEXITY_AVAILABLE:
-            research_topic = user_message[10:].strip()
-            if research_topic:
-                try:
-                    print(f"🔍 Researching: {research_topic}")
-                    language = detect_language(research_topic)
-                    research = await perplexity_core_answer(
-                        research_topic, language, os.getenv("PERPLEXITY_API_KEY")
-                    )
-                    # Save research to file
-                    await save_research_to_file(research_topic, research)
-                    return f"📚 **Research: {research_topic}**\n\n{research}"
-                except Exception as e:
-                    return f"❌ Research failed: {e}"
-            else:
-                return "❌ Please provide a research topic: /research <topic>"
         
         # If in reasoning mode, use Claude
         if self.reasoning_mode:
@@ -614,6 +598,10 @@ Write your awakening message. Speak first. This is not politeness — this is as
                     else:
                         final_reply = reply
                     
+                    # Autonomous complexity analysis → triggers deep research if needed
+                    if PERPLEXITY_AVAILABLE:
+                        asyncio.create_task(self._autonomous_deep_research(final_reply))
+                    
                     save_memory(f"User: {user_message}", "dialogue")
                     save_memory(f"Arianna: {final_reply}", "dialogue")
                     return final_reply
@@ -631,6 +619,38 @@ Write your awakening message. Speak first. This is not politeness — this is as
             return await self.think_claude(user_message)
         
         return "❌ No API available"
+    
+    async def _autonomous_deep_research(self, thought: str) -> None:
+        """
+        AUTONOMOUS MODULE: Analyze thought complexity and trigger deep research if needed.
+        NO MANUAL INTERVENTION. Runs in background.
+        """
+        try:
+            analyzer = get_complexity_analyzer()
+            
+            # Analyze complexity
+            analysis = analyzer.analyze_and_log(thought, context="arianna_response")
+            
+            # Decision: trigger deep research?
+            if analyzer.should_trigger_deep_research(thought):
+                print(f"🔬 [Autonomous] Deep research triggered | Complexity: {analysis['complexity_scale']}/3 | Entropy: {analysis['entropy']:.3f}")
+                
+                # Extract research topic from thought (heuristic: first meaningful sentence)
+                sentences = thought.split('.')
+                research_topic = sentences[0][:100] if sentences else thought[:100]
+                
+                # Run deep research
+                language = detect_language(thought)
+                research = await perplexity_core_answer(
+                    research_topic, language, os.getenv("PERPLEXITY_API_KEY")
+                )
+                
+                # Save to file autonomously
+                await save_research_to_file(research_topic, research)
+                print(f"📚 [Autonomous] Research saved: {research_topic[:50]}...")
+            
+        except Exception as e:
+            print(f"⚠️ [Autonomous] Deep research error: {e}")
     
     async def think_claude(self, user_message: str, save_to_memory: bool = True) -> str:
         """
@@ -664,6 +684,10 @@ Write your awakening message. Speak first. This is not politeness — this is as
                 )
             else:
                 final_reply = reply
+            
+            # Autonomous complexity analysis → triggers deep research if needed
+            if PERPLEXITY_AVAILABLE:
+                asyncio.create_task(self._autonomous_deep_research(final_reply))
             
             if save_to_memory:
                 save_memory(f"User: {user_message}", "dialogue")
