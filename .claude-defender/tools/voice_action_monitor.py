@@ -83,39 +83,160 @@ def execute_action(action, params, original_input):
     try:
         if action == "audit_utility":
             utility = params[0] if params else "unknown"
-            result = f"Auditing {utility}... (placeholder - implement in next session)"
-            status = "pending_implementation"
+            # Check if utility file exists
+            utility_path = Path.home() / "ariannamethod" / "arianna_core_utils" / f"{utility}.py"
+            if utility_path.exists():
+                # Run syntax check
+                syntax_check = subprocess.run(
+                    ["python3", "-m", "py_compile", str(utility_path)],
+                    capture_output=True,
+                    text=True
+                )
+                if syntax_check.returncode == 0:
+                    result = f"✓ {utility}.py: syntax OK"
+                    status = "success"
+                else:
+                    result = f"✗ {utility}.py: syntax error - {syntax_check.stderr[:200]}"
+                    status = "failed"
+            else:
+                result = f"✗ {utility}.py: not found in arianna_core_utils/"
+                status = "failed"
 
         elif action == "debug_utility":
             utility = params[0] if params else "unknown"
-            result = f"Debugging {utility}... (placeholder - implement in next session)"
-            status = "pending_implementation"
-
-        elif action == "check_transformers":
-            result = subprocess.run(
+            # Check if process is running
+            ps_result = subprocess.run(
                 ["ps", "aux"],
                 capture_output=True,
                 text=True
             )
-            transformer_count = len([l for l in result.stdout.split('\n') if 'transformer' in l.lower()])
-            result = f"Found {transformer_count} transformer processes"
-            status = "success"
+            running = utility in ps_result.stdout
+
+            if running:
+                result = f"✓ {utility}: process is running"
+                status = "success"
+            else:
+                result = f"✗ {utility}: process NOT running"
+                # Try to find why (check logs, errors, etc.)
+                log_path = Path.home() / "ariannamethod" / "logs" / f"{utility}.log"
+                if log_path.exists():
+                    # Read last 5 lines of log
+                    tail_result = subprocess.run(
+                        ["tail", "-5", str(log_path)],
+                        capture_output=True,
+                        text=True
+                    )
+                    result += f"\n\nLast log entries:\n{tail_result.stdout}"
+                status = "warning"
+
+        elif action == "check_transformers":
+            ps_result = subprocess.run(
+                ["ps", "aux"],
+                capture_output=True,
+                text=True
+            )
+            transformer_lines = [l for l in ps_result.stdout.split('\n') if 'transformer' in l.lower()]
+            transformer_count = len(transformer_lines)
+
+            if transformer_count > 0:
+                result = f"✓ Found {transformer_count} transformer processes:\n"
+                for line in transformer_lines[:3]:  # Show first 3
+                    result += f"  {line[:100]}\n"
+                status = "success"
+            else:
+                result = "✗ No transformer processes found. Field may be down."
+                status = "warning"
 
         elif action == "check_filed":
-            result = "Filed health check (placeholder - implement in next session)"
-            status = "pending_implementation"
+            # Check if filed.py process is running
+            ps_result = subprocess.run(
+                ["ps", "aux"],
+                capture_output=True,
+                text=True
+            )
+            filed_running = 'filed' in ps_result.stdout or 'field_core' in ps_result.stdout
+
+            if filed_running:
+                result = "✓ Filed/Field Core is running"
+                status = "success"
+            else:
+                result = "✗ Filed/Field Core is NOT running"
+                status = "warning"
 
         elif action == "full_audit":
-            result = "Full repository audit (placeholder - implement in next session)"
-            status = "pending_implementation"
+            # Run comprehensive system audit
+            components = ['arianna', 'monday', 'field_core', 'webhook']
+            ps_result = subprocess.run(["ps", "aux"], capture_output=True, text=True)
+
+            results = []
+            for comp in components:
+                running = comp in ps_result.stdout
+                results.append(f"{'✓' if running else '✗'} {comp}: {'RUNNING' if running else 'DOWN'}")
+
+            result = "System Audit:\n" + "\n".join(results)
+
+            # Check database
+            db_path = Path.home() / "ariannamethod" / "resonance.sqlite3"
+            if db_path.exists():
+                result += f"\n✓ resonance.sqlite3: exists ({db_path.stat().st_size} bytes)"
+            else:
+                result += "\n✗ resonance.sqlite3: MISSING"
+
+            status = "success"
 
         elif action == "check_fortification":
-            result = "Fortification status check (placeholder - implement in next session)"
-            status = "pending_implementation"
+            # Basic fortification checks
+            checks = []
+
+            # Check if API keys are in environment
+            api_keys_ok = bool(subprocess.run(
+                ["bash", "-c", "[ ! -z \"$OPENAI_API_KEY\" ]"],
+                capture_output=True
+            ).returncode == 0)
+            checks.append(f"{'✓' if api_keys_ok else '✗'} API keys: {'OK' if api_keys_ok else 'MISSING'}")
+
+            # Check critical files are executable
+            boot_script = Path.home() / ".termux" / "boot" / "arianna_system_init.sh"
+            boot_ok = boot_script.exists() and boot_script.stat().st_mode & 0o111
+            checks.append(f"{'✓' if boot_ok else '✗'} Boot script: {'executable' if boot_ok else 'NOT executable'}")
+
+            # Check resonance.sqlite3 permissions
+            db_path = Path.home() / "ariannamethod" / "resonance.sqlite3"
+            db_ok = db_path.exists() and db_path.stat().st_mode & 0o600
+            checks.append(f"{'✓' if db_ok else '✗'} Database: {'secure' if db_ok else 'INSECURE'}")
+
+            result = "Fortification Status:\n" + "\n".join(checks)
+            status = "success"
 
         elif action == "system_health":
-            result = "System health check (placeholder - implement in next session)"
-            status = "pending_implementation"
+            # Comprehensive health check
+            health = []
+
+            # CPU/Memory
+            uptime_result = subprocess.run(["uptime"], capture_output=True, text=True)
+            health.append(f"Uptime: {uptime_result.stdout.strip()}")
+
+            # Disk space
+            df_result = subprocess.run(
+                ["df", "-h", str(Path.home())],
+                capture_output=True,
+                text=True
+            )
+            health.append(f"Disk: {df_result.stdout.split()[10]}% used")
+
+            # Process count
+            ps_result = subprocess.run(["ps", "aux"], capture_output=True, text=True)
+            process_count = len(ps_result.stdout.split('\n')) - 1
+            health.append(f"Processes: {process_count} running")
+
+            # Database size
+            db_path = Path.home() / "ariannamethod" / "resonance.sqlite3"
+            if db_path.exists():
+                db_size = db_path.stat().st_size / 1024 / 1024  # MB
+                health.append(f"Database: {db_size:.1f}MB")
+
+            result = "System Health:\n" + "\n".join(health)
+            status = "success"
 
         else:
             result = f"Unknown action: {action}"
