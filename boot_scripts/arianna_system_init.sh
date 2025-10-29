@@ -76,12 +76,7 @@ start_component "GitHub Scout Daemon" \
     "nohup python3 $HOME/ariannamethod/.claude-defender/tools/github-scout-daemon.py" \
     "github_scout_daemon"
 
-# 8. Genesis-1 daemon (dual persona digests every 24h)
-start_component "Genesis-1 Daemon" \
-    "nohup bash $HOME/ariannamethod/.claude-defender/tools/genesis1-daemon.sh" \
-    "genesis1_daemon"
-
-# 9. Voice Action Monitor (NEW - autonomous action layer)
+# 8. Voice Action Monitor (autonomous action layer)
 start_component "Voice Action Monitor" \
     "nohup python3 $HOME/ariannamethod/.claude-defender/tools/voice_action_monitor.py" \
     "voice_action_monitor"
