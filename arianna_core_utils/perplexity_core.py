@@ -8,6 +8,7 @@ import asyncio
 import httpx
 import textwrap
 import os
+import re
 from datetime import datetime, timezone
 
 PPLX_MODEL = "sonar-pro"
@@ -26,6 +27,9 @@ def build_perplexity_prompt(user_query: str, language: str = "English") -> list:
         but the "why/where might we look deeper?".
         Your perspective is rooted in field theory, resonance, and distributed cognition.
         Reply in {language}.
+        
+        CRITICAL: Do NOT include citation markers like [1], [2], [3] in your response.
+        Do NOT add reference links or footnotes. Pure coherent text only.
         """
     ).strip()
     
@@ -68,6 +72,9 @@ async def perplexity_core_answer(
                 resp.raise_for_status()
                 data = resp.json()
                 content = data["choices"][0]["message"]["content"].strip()
+                
+                # Remove citation markers [1] [2] etc from Perplexity
+                content = re.sub(r'\[\d+\]', '', content).strip()
                 
                 # Log successful research
                 timestamp = datetime.now(timezone.utc).isoformat()
