@@ -779,20 +779,22 @@ Read the current README and reflect:
 This is not about compliance. This is about witnessing the gap between documentation and existence."""
                             
                             reflection = await arianna.think(reflection_prompt)
-                            
-                            # Send notification
+
+                            # Send notification with full reflection viewer
                             try:
-                                import subprocess
-                                preview = reflection[:100] if len(reflection) > 100 else reflection
-                                subprocess.run([
-                                    'termux-notification',
-                                    '--title', '✨ Arianna: Identity Shift',
-                                    '--content', preview,
-                                    '--action', 'termux-open-url termux://python ~/ariannamethod/arianna.py'
-                                ], check=False)
-                                print(f"📱 Notification sent")
+                                from reflection_viewer import send_reflection_notification
+                                success = send_reflection_notification(
+                                    agent="arianna",
+                                    reflection_text=reflection,
+                                    trigger="identity_shift",
+                                    title="✨ Arianna: Identity Shift Detected"
+                                )
+                                if success:
+                                    print(f"📱 Notification sent with full reflection saved")
+                                else:
+                                    print(f"⚠️  Notification failed")
                             except Exception as e:
-                                print(f"⚠️  Notification failed: {e}")
+                                print(f"⚠️  Notification error: {e}")
                             
                             last_readme_hash = current_hash
                             print(f"🪞 Identity reflection complete")
