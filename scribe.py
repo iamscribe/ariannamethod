@@ -452,14 +452,16 @@ When Oleg needs context, I provide it.
         consilium = None
         if CONSILIUM_AVAILABLE and ANTHROPIC_API_KEY:
             try:
-                # Note: ConsiliumAgent might need OpenAI key, will handle gracefully
-                print("🧬 Consilium integration: checking...")
-                openai_key = os.getenv("OPENAI_API_KEY", "")
-                if openai_key:
-                    consilium = ConsiliumAgent('scribe', openai_key, model='gpt-4o-mini')
-                    print("✅ Consilium agent initialized")
-                else:
-                    print("⚠️  Consilium requires OPENAI_API_KEY (skipping)")
+                # Scribe uses Claude Sonnet 4.5 with low temperature (precise, deterministic)
+                print("🧬 Consilium integration: initializing Claude 4.5...")
+                consilium = ConsiliumAgent(
+                    agent_name='scribe',
+                    api_key=ANTHROPIC_API_KEY,
+                    model='claude-sonnet-4-20250514',  # Claude Sonnet 4.5
+                    temperature=0.5,  # Lower temp = precise, code-specific responses
+                    api_type='anthropic'
+                )
+                print("✅ Consilium agent initialized (Claude 4.5, temp=0.5)")
             except Exception as e:
                 print(f"⚠️  Consilium init failed: {e}")
         
