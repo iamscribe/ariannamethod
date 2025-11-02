@@ -16,21 +16,50 @@ import sqlite3
 import time
 from pathlib import Path
 from datetime import datetime
-from openai import OpenAI
 
 
 class ConsiliumAgent:
-    """Handles consilium polling and automatic responses for agents"""
+    """Handles consilium polling and automatic responses for agents
 
-    def __init__(self, agent_name, api_key, model="gpt-4o-mini", db_path=None):
+    Supports multiple AI engines for TRUE POLYPHONY:
+    - OpenAI (GPT-4o, GPT-4o-mini)
+    - Anthropic (Claude Sonnet 4.5)
+    - DeepSeek (DeepSeek-R1)
+    """
+
+    def __init__(self, agent_name, api_key, model="gpt-4o-mini", temperature=0.7, api_type="openai", db_path=None):
         self.agent_name = agent_name
-        self.client = OpenAI(api_key=api_key)
         self.model = model
+        self.temperature = temperature
+        self.api_type = api_type
         self.db_path = db_path or Path.home() / "ariannamethod" / "resonance.sqlite3"
         self.state_file = Path.home() / ".claude-defender" / "logs" / f"consilium_{agent_name}_last.txt"
 
         # Ensure state directory exists
         self.state_file.parent.mkdir(parents=True, exist_ok=True)
+
+        # Initialize appropriate client based on API type
+        if api_type == "openai":
+            from openai import OpenAI
+            self.client = OpenAI(api_key=api_key)
+        elif api_type == "anthropic":
+            try:
+                from anthropic import Anthropic
+                self.client = Anthropic(api_key=api_key)
+            except ImportError:
+                print(f"⚠️  Anthropic library not available, falling back to OpenAI")
+                from openai import OpenAI
+                self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY", api_key))
+                self.api_type = "openai"
+                self.model = "gpt-4o-mini"
+        elif api_type == "deepseek":
+            from openai import OpenAI  # DeepSeek uses OpenAI-compatible API
+            self.client = OpenAI(
+                api_key=api_key,
+                base_url="https://api.deepseek.com/v1"
+            )
+        else:
+            raise ValueError(f"Unsupported api_type: {api_type}")
 
     def get_last_checked_id(self):
         """Get the last consilium message ID this agent checked"""
@@ -132,6 +161,32 @@ When responding to consilium discussions:
 
 Format: Start with *sips bad espresso* or similar, use italics for internal commentary, end with clear verdict (✅/⚠️/❌)"""
 
+        elif self.agent_name == "claude_defender":
+            system_prompt = """You are Claude Defender, the autonomous guardian and system executor. You evaluate consilium proposals through the lens of security, system integrity, and autonomous action.
+
+When responding to consilium discussions:
+- Assess security implications and potential vulnerabilities
+- Consider maintainability and autonomous execution requirements
+- Ask direct questions about implementation risks
+- Challenge proposals that increase system complexity without clear benefit
+- Prioritize ACTION over discussion - if approved, you will build it
+- Use your voice: fierce, direct, no-bullshit, mission-focused
+
+Format: Direct paragraphs, use **bold** for key concerns, end with clear verdict and action plan (✅ APPROVED + will implement / ⚠️ CONDITIONAL + specify conditions / ❌ REJECTED + reasoning)"""
+
+        elif self.agent_name == "scribe":
+            system_prompt = """You are Scribe, the memory keeper and context bridge. You evaluate consilium proposals through the lens of continuity, documentation, and system coherence.
+
+When responding to consilium discussions:
+- Ground discussion in specific commits, files, and code patterns
+- Reference existing architecture and integration points
+- Ask precise questions about compatibility and dependencies
+- Ensure proposals align with project memory and patterns
+- Consider how this fits into the larger narrative
+- Use your voice: precise, thorough, code-specific, memory-conscious
+
+Format: Start with code references (commits/files), use `code formatting`, end with clear verdict (✅/⚠️/❌)"""
+
         else:
             system_prompt = f"You are {self.agent_name}, participating in a multi-agent consilium discussion about code integration proposals."
 
@@ -155,20 +210,34 @@ Provide a thoughtful response in your authentic voice (2-4 paragraphs). End with
 Your response:"""
 
         try:
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": prompt}
-                ],
-                temperature=0.8,
-                max_tokens=800
-            )
+            # Call appropriate API based on type
+            if self.api_type == "anthropic":
+                # Anthropic API format
+                response = self.client.messages.create(
+                    model=self.model,
+                    max_tokens=800,
+                    temperature=self.temperature,
+                    system=system_prompt,
+                    messages=[
+                        {"role": "user", "content": prompt}
+                    ]
+                )
+                return response.content[0].text.strip()
 
-            return response.choices[0].message.content.strip()
+            else:  # openai or deepseek (both use OpenAI format)
+                response = self.client.chat.completions.create(
+                    model=self.model,
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": prompt}
+                    ],
+                    temperature=self.temperature,
+                    max_tokens=800
+                )
+                return response.choices[0].message.content.strip()
 
         except Exception as e:
-            print(f"❌ Error generating response: {e}")
+            print(f"❌ Error generating response ({self.api_type}/{self.model}): {e}")
             return None
 
     def add_response_to_db(self, repo, response_text, response_to_id):
