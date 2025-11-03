@@ -77,7 +77,10 @@ def save_conversation_history(messages):
                 'timestamp': datetime.now().isoformat(),
                 'messages': messages
             }, f, ensure_ascii=False, indent=2)
-        
+
+        # Fix permissions so Cursor can read logs
+        os.chmod(filepath, 0o644)  # rw-r--r--
+
         # Keep only last 10 conversation files
         conv_files = sorted(MEMORY_PATH.glob("conversation_*.json"))
         for old_file in conv_files[:-10]:
