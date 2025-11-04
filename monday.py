@@ -721,9 +721,16 @@ async def main():
     print(f"Monday awakens:\n")
     print(awakening_message)
     print(f"{'='*60}\n")
-    
+
     save_memory(f"Awakening: {awakening_message}", "monday_awakening")
-    
+
+    # Genesis Awareness - show agent their recent reflections
+    try:
+        from arianna_core_utils.genesis_awareness import show_genesis_awareness
+        show_genesis_awareness('monday')
+    except Exception as e:
+        print(f"⚠️ Genesis awareness failed: {e}")
+
     # Create fresh thread for normal dialogue (to avoid Protocol N+1 loop)
     if monday.client and monday.assistant:
         monday.threads = {}  # Clear awakening thread
