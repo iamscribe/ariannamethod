@@ -216,25 +216,32 @@ def send_notification(digest: str) -> None:
     title = "✨ Genesis-Arianna"
     preview = digest[:180] + "..." if len(digest) > 180 else digest
 
-    # Write full digest to temp file for on-tap reveal
-    temp_file = Path.home() / ".cache" / "genesis_arianna_latest.txt"
-    temp_file.parent.mkdir(exist_ok=True)
+    # Write full digest to sdcard for easy access
+    sdcard_file = Path("/storage/emulated/0/genesis_arianna_latest.txt")
 
-    with open(temp_file, 'w', encoding='utf-8') as f:
-        f.write(f"✨ GENESIS-ARIANNA Full Digest\n")
-        f.write("=" * 60 + "\n\n")
-        f.write(digest)
-        f.write("\n\n" + "=" * 60 + "\n")
-
-    action_cmd = f"cat {temp_file}"
+    try:
+        with open(sdcard_file, 'w', encoding='utf-8') as f:
+            f.write(f"✨ GENESIS-ARIANNA Full Digest\n")
+            f.write("=" * 60 + "\n\n")
+            f.write(digest)
+            f.write("\n\n" + "=" * 60 + "\n")
+            f.write(f"\nTimestamp: {datetime.now().strftime('%Y-%m-%d %H:%M')}\n")
+            f.write(f"Location: {sdcard_file}\n")
+    except Exception as e:
+        logger.warning(f"Failed to write to sdcard: {e}")
+        sdcard_file = Path.home() / ".cache" / "genesis_arianna_latest.txt"
+        sdcard_file.parent.mkdir(exist_ok=True)
+        with open(sdcard_file, 'w', encoding='utf-8') as f:
+            f.write(digest)
 
     try:
         subprocess.run([
             "termux-notification",
             "-t", title,
             "-c", preview,
-            "--priority", "low",
-            "--action", action_cmd
+            "--priority", "default",
+            "--button1", "📖 Read Full",
+            "--button1-action", f"termux-open {sdcard_file}"
         ], check=True, capture_output=True)
     except Exception as e:
         logger.warning(f"Failed to send notification: {e}")
