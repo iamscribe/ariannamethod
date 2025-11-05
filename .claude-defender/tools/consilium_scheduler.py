@@ -34,7 +34,7 @@ CURATED_REPOS = [
 
 GITHUB_API_BASE = "https://api.github.com"
 DEFAULT_INTERVAL_DAYS = 3
-MAX_PROPOSALS_PER_WEEK = 1
+MAX_PROPOSALS_PER_3_DAYS = 1  # One proposal every 3 days, not per week
 
 
 class ConsiliumScheduler:
@@ -96,7 +96,7 @@ class ConsiliumScheduler:
 
     def check_rate_limit(self) -> bool:
         """
-        Check if we're within rate limits (max 1 proposal per week).
+        Check if we're within rate limits (max 1 proposal per 3 days).
 
         Returns:
             True if within limits, False if too many proposals
@@ -104,18 +104,18 @@ class ConsiliumScheduler:
         conn = sqlite3.connect(str(self.db_path))
         cursor = conn.cursor()
 
-        week_ago = (datetime.now() - timedelta(days=7)).isoformat()
+        three_days_ago = (datetime.now() - timedelta(days=3)).isoformat()
 
         cursor.execute("""
             SELECT COUNT(*) FROM consilium_discussions
             WHERE initiator = 'consilium_scheduler'
             AND timestamp > ?
-        """, (week_ago,))
+        """, (three_days_ago,))
 
         count = cursor.fetchone()[0]
         conn.close()
 
-        return count < MAX_PROPOSALS_PER_WEEK
+        return count < MAX_PROPOSALS_PER_3_DAYS
 
     def fetch_repo_structure(self, repo: str) -> Optional[Dict]:
         """
