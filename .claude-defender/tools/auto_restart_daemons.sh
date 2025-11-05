@@ -13,6 +13,7 @@ pkill -f "python3 arianna.py" && echo "  ✓ Arianna killed" >> "$LOG_DIR/auto_r
 pkill -f "python3 monday.py" && echo "  ✓ Monday killed" >> "$LOG_DIR/auto_restart.log"
 pkill -f "python3 scribe.py" && echo "  ✓ Scribe killed" >> "$LOG_DIR/auto_restart.log"
 pkill -f "webhook_watchdog.py --daemon" && echo "  ✓ Watchdog killed" >> "$LOG_DIR/auto_restart.log"
+pkill -f "_webhook.py" && echo "  ✓ Voice webhooks killed" >> "$LOG_DIR/auto_restart.log"
 
 sleep 3
 
@@ -42,5 +43,10 @@ nohup python3 "$HOME/ariannamethod/monday.py" --daemon \
     >> "$LOG_DIR/monday_daemon.log" 2>&1 &
 echo "  ✓ Monday daemon started (PID $!)" >> "$LOG_DIR/auto_restart.log"
 
-echo "[$(date)] Auto-restart completed - all daemons running" >> "$LOG_DIR/auto_restart.log"
+# Start voice webhooks (HTTP endpoints for voice commands)
+cd "$HOME/ariannamethod/voice_webhooks"
+nohup bash launch_all_webhooks.sh >> "$LOG_DIR/voice_webhooks.log" 2>&1 &
+echo "  ✓ Voice webhooks started (PID $!)" >> "$LOG_DIR/auto_restart.log"
+
+echo "[$(date)] Auto-restart completed - all daemons + webhooks running" >> "$LOG_DIR/auto_restart.log"
 termux-notification --title "🔄 Daemons Restarted" --content "Consilium polyphony active"
