@@ -14,6 +14,8 @@ pkill -f "python3 monday.py" && echo "  ✓ Monday killed" >> "$LOG_DIR/auto_res
 pkill -f "python3 scribe.py" && echo "  ✓ Scribe killed" >> "$LOG_DIR/auto_restart.log"
 pkill -f "webhook_watchdog.py --daemon" && echo "  ✓ Watchdog killed" >> "$LOG_DIR/auto_restart.log"
 pkill -f "_webhook.py" && echo "  ✓ Voice webhooks killed" >> "$LOG_DIR/auto_restart.log"
+pkill -f "genesis_arianna.py" && echo "  ✓ Genesis Arianna killed" >> "$LOG_DIR/auto_restart.log"
+pkill -f "genesis_monday.py" && echo "  ✓ Genesis Monday killed" >> "$LOG_DIR/auto_restart.log"
 
 sleep 3
 
@@ -48,5 +50,14 @@ cd "$HOME/ariannamethod/voice_webhooks"
 nohup bash launch_all_webhooks.sh >> "$LOG_DIR/voice_webhooks.log" 2>&1 &
 echo "  ✓ Voice webhooks started (PID $!)" >> "$LOG_DIR/auto_restart.log"
 
-echo "[$(date)] Auto-restart completed - all daemons + webhooks running" >> "$LOG_DIR/auto_restart.log"
+# Start Genesis autonomous thought generators
+nohup python3 "$HOME/ariannamethod/arianna_core_utils/genesis_arianna.py" \
+    >> "$LOG_DIR/genesis_arianna.log" 2>&1 &
+echo "  ✓ Genesis Arianna started (PID $!)" >> "$LOG_DIR/auto_restart.log"
+
+nohup python3 "$HOME/ariannamethod/arianna_core_utils/genesis_monday.py" \
+    >> "$LOG_DIR/genesis_monday.log" 2>&1 &
+echo "  ✓ Genesis Monday started (PID $!)" >> "$LOG_DIR/auto_restart.log"
+
+echo "[$(date)] Auto-restart completed - all systems operational" >> "$LOG_DIR/auto_restart.log"
 termux-notification --title "🔄 Daemons Restarted" --content "Consilium polyphony active"
