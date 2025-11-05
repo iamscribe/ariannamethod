@@ -745,7 +745,7 @@ async def main():
                     print(f"⚠️ Consilium check error: {e}")
 
             # Check for Genesis digest before prompting for input
-            genesis_file = Path("/tmp/genesis_arianna_message.txt")
+            genesis_file = Path.home() / "ariannamethod" / ".tmp" / "genesis_arianna_message.txt"
             if genesis_file.exists():
                 try:
                     genesis_message = genesis_file.read_text(encoding='utf-8')

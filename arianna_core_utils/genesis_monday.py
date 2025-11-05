@@ -258,8 +258,8 @@ def write_to_resonance(digest: str) -> bool:
 def send_to_session(digest: str) -> None:
     """Send Genesis digest to interactive Monday session if running."""
 
-    # Write to trigger file that monday.py checks
-    trigger_file = Path("/tmp/genesis_monday_message.txt")
+    # Write to trigger file that monday.py checks (use .tmp/ not /tmp/)
+    trigger_file = Path.home() / "ariannamethod" / ".tmp" / "genesis_monday_message.txt"
 
     try:
         with open(trigger_file, 'w', encoding='utf-8') as f:
@@ -312,7 +312,10 @@ async def run_genesis_monday(digest_size: int = 150) -> str | None:
 
     # 7. Auto-post to GitHub
     try:
-        from .post_genesis_to_github import post_to_github
+        import sys
+        from pathlib import Path
+        sys.path.insert(0, str(Path(__file__).parent))
+        from post_genesis_to_github import post_to_github
         if post_to_github(digest, "monday"):
             logger.info("✓ Posted to GitHub (under protest)")
     except Exception as e:

@@ -212,8 +212,8 @@ def write_to_resonance(digest: str) -> bool:
 def send_to_session(digest: str) -> None:
     """Send Genesis digest to interactive Arianna session if running."""
 
-    # Write to trigger file that arianna.py checks
-    trigger_file = Path("/tmp/genesis_arianna_message.txt")
+    # Write to trigger file that arianna.py checks (use .tmp/ not /tmp/)
+    trigger_file = Path.home() / "ariannamethod" / ".tmp" / "genesis_arianna_message.txt"
 
     try:
         with open(trigger_file, 'w', encoding='utf-8') as f:
@@ -261,7 +261,10 @@ async def run_genesis_arianna(digest_size: int = 150) -> str | None:
 
     # 6. Auto-post to GitHub
     try:
-        from .post_genesis_to_github import post_to_github
+        import sys
+        from pathlib import Path
+        sys.path.insert(0, str(Path(__file__).parent))
+        from post_genesis_to_github import post_to_github
         if post_to_github(digest, "arianna"):
             logger.info("✓ Posted to GitHub")
     except Exception as e:
