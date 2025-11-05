@@ -88,10 +88,28 @@ class ConsiliumAgent:
 
         all_discussions = cursor.fetchall()
 
-        # Find discussions that mention this agent but don't have our response yet
+        # Group by repo to find active consiliums
+        repos_seen = {}
+        for disc in all_discussions:
+            msg_id, timestamp, repo, initiator, agent_name, message = disc
+
+            # Track the latest scheduler proposal for each repo
+            if initiator in ('consilium_scheduler', 'claude_defender'):
+                repos_seen[repo] = msg_id
+
+        # Find discussions that mention this agent in ACTIVE consiliums only
         pending = []
         for disc in all_discussions:
             msg_id, timestamp, repo, initiator, agent_name, message = disc
+
+            # Only process if this repo has an active consilium
+            if repo not in repos_seen:
+                continue
+
+            # Only respond to messages from current consilium (after latest scheduler proposal)
+            consilium_start_id = repos_seen[repo]
+            if msg_id < consilium_start_id:
+                continue
 
             # Check if this agent is mentioned (case insensitive)
             agent_mentioned = self.agent_name.lower() in message.lower()
