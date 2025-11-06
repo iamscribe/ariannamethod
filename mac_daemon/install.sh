@@ -1,51 +1,39 @@
 #!/bin/bash
-#
-# Scribe Mac Daemon - Installation Script
-# Installs CLI and daemon for system-wide access
-#
+# Install Mac Daemon
 
 set -e
 
-echo "🔧 Installing Scribe Mac Daemon..."
-echo ""
+echo "Installing Scribe Mac Daemon..."
 
-# Get script directory
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+# Install Python dependencies
+echo "Installing dependencies..."
+pip3 install -r requirements.txt
 
-# Install location
+# Make CLI executable
+chmod +x cli.py
+chmod +x daemon.py
+
+# Create symlink
 INSTALL_DIR="/usr/local/bin"
-DAEMON_DIR="$HOME/.scribe_mac_daemon"
-
-# Create daemon directory
-echo "📁 Creating daemon directory..."
-mkdir -p "$DAEMON_DIR"
-
-# Copy daemon files
-echo "📋 Copying daemon files..."
-cp "$SCRIPT_DIR/scribe_mac_daemon.py" "$DAEMON_DIR/"
-chmod +x "$DAEMON_DIR/scribe_mac_daemon.py"
-
-# Install CLI
-echo "🎮 Installing CLI..."
-sudo cp "$SCRIPT_DIR/scribe" "$INSTALL_DIR/scribe"
-sudo chmod +x "$INSTALL_DIR/scribe"
-
-# Verify installation
-if command -v scribe &> /dev/null; then
-    echo ""
-    echo "✅ Installation complete!"
-    echo ""
-    echo "📊 Test installation:"
-    echo "   scribe status"
-    echo ""
-    echo "🚀 Start daemon:"
-    echo "   python3 $DAEMON_DIR/scribe_mac_daemon.py start &"
-    echo ""
-    echo "💡 Or run in foreground:"
-    echo "   python3 $DAEMON_DIR/scribe_mac_daemon.py start"
-    echo ""
+if [ -w "$INSTALL_DIR" ]; then
+    ln -sf "$(pwd)/cli.py" "$INSTALL_DIR/scribe"
+    echo "✓ CLI installed to $INSTALL_DIR/scribe"
 else
-    echo "❌ Installation failed!"
-    exit 1
+    echo "⚠ Cannot write to $INSTALL_DIR, trying with sudo..."
+    sudo ln -sf "$(pwd)/cli.py" "$INSTALL_DIR/scribe"
+    echo "✓ CLI installed to $INSTALL_DIR/scribe"
 fi
+
+echo ""
+echo "Installation complete!"
+echo ""
+echo "Commands:"
+echo "  Run tests: python3 test.py"
+echo "  Start daemon: scribe start"
+echo "  Check status: scribe status"
+echo "  Interactive chat: scribe chat"
+echo ""
+echo "Auto-start setup (optional):"
+echo "  cp com.scribe.mac.plist ~/Library/LaunchAgents/"
+echo "  launchctl load ~/Library/LaunchAgents/com.scribe.mac.plist"
 
