@@ -120,3 +120,9 @@ memory/scribe/*.json
 .scribe_*_cache.json  # Scribe's repo_monitor caches for ecosystem awareness
 # Scribe local tools (security risk if public)
 scribe_git_tools.py
+
+# Mac daemon sensitive files
+mac_daemon/git_tools.py
+mac_daemon/job_queue.py
+mac_daemon/.DS_Store
+mac_daemon/__pycache__/
