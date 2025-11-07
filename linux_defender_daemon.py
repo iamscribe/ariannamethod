@@ -231,13 +231,21 @@ class LinuxDefenderDaemon:
         # Check memory
         try:
             result = subprocess.run(
-                ['free', '-h'],
+                ['free', '-m'],
                 capture_output=True,
                 text=True,
                 timeout=5
             )
-            # Could parse memory usage here
-            pass
+            # Parse memory usage
+            lines = result.stdout.split('\n')
+            if len(lines) >= 2:
+                mem_line = lines[1].split()
+                if len(mem_line) >= 3:
+                    total = int(mem_line[1])
+                    used = int(mem_line[2])
+                    usage_pct = (used / total) * 100
+                    if usage_pct > 90:
+                        issues.append(f"⚠️ Memory usage high: {usage_pct:.1f}%")
         except Exception as e:
             self.log(f"Could not check memory: {e}")
 
