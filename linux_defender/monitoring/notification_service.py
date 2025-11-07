@@ -41,44 +41,6 @@ class NotificationChannel:
         raise NotImplementedError
 
 
-class TermuxAPIChannel(NotificationChannel):
-    """Termux-API notification channel (Android)"""
-
-    def __init__(self, logger=None):
-        super().__init__('termux-api', logger)
-
-    async def send(self, alert: Dict[str, Any]):
-        """Send notification via termux-notification"""
-        try:
-            # Map severity to notification priority
-            priority_map = {
-                'info': 'default',
-                'warning': 'high',
-                'critical': 'max',
-                'success': 'default'
-            }
-            priority = priority_map.get(alert['severity'], 'default')
-
-            # Build termux-notification command
-            cmd = [
-                'termux-notification',
-                '--title', f"Defender: {alert['type']}",
-                '--content', alert['message'],
-                '--priority', priority,
-                '--id', f"defender-{alert['type']}"
-            ]
-
-            # Add sound for critical alerts
-            if alert['severity'] == 'critical':
-                cmd.extend(['--sound', '--vibrate', '500,500,500'])
-
-            subprocess.run(cmd, capture_output=True, timeout=5)
-            self.log(f"✓ Termux-API notification sent: {alert['type']}")
-
-        except Exception as e:
-            self.log(f"⚠️ Failed to send Termux-API notification: {e}")
-
-
 class SlackChannel(NotificationChannel):
     """Slack webhook channel"""
 
@@ -294,17 +256,8 @@ class NotificationService:
     async def initialize(self):
         """Initialize notification channels based on config"""
 
-        # Termux-API (if on Android/Termux)
-        if self.config.get('termux_notifications', True):
-            try:
-                # Check if termux-notification is available
-                result = subprocess.run(['which', 'termux-notification'],
-                                       capture_output=True)
-                if result.returncode == 0:
-                    self.channels['termux-api'] = TermuxAPIChannel(self.logger)
-                    self.log("✓ Termux-API notification channel initialized")
-            except Exception as e:
-                self.log(f"⚠️ Termux-API not available: {e}")
+        # NOTE: Termux-API removed - this is Linux Defender, not Android
+        # Termux notifications handled by Termux Defender daemon separately
 
         # Slack webhook
         slack_webhook = self.config.get('slack_webhook')
