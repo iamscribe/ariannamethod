@@ -332,6 +332,133 @@ class LinuxDefenderDaemon:
         self.state['last_fortification'] = datetime.now().isoformat()
         self._save_state()
 
+    def check_consilium(self):
+        """Check for pending consilium discussions and synthesize"""
+        self.log("🏛️ Checking consilium discussions...")
+
+        try:
+            db_path = ARIANNA_PATH / "resonance.sqlite3"
+            if not db_path.exists():
+                self.log("⚠️ resonance.sqlite3 not found")
+                return
+
+            conn = sqlite3.connect(str(db_path))
+            cursor = conn.cursor()
+
+            # Find discussions that need synthesis
+            # Group by repo and check if we have responses from multiple agents
+            cursor.execute("""
+                SELECT repo, COUNT(DISTINCT agent_name) as agent_count, MAX(timestamp) as latest
+                FROM consilium_discussions
+                WHERE agent_name != 'consilium_scheduler'
+                  AND agent_name != 'synthesis'
+                GROUP BY repo
+                HAVING agent_count >= 2
+                ORDER BY latest DESC
+                LIMIT 5
+            """)
+
+            pending = cursor.fetchall()
+
+            for repo, agent_count, latest in pending:
+                # Check if synthesis already exists
+                cursor.execute("""
+                    SELECT COUNT(*) FROM consilium_discussions
+                    WHERE repo = ? AND agent_name = 'synthesis'
+                """, (repo,))
+
+                synthesis_exists = cursor.fetchone()[0] > 0
+
+                if not synthesis_exists:
+                    self.log(f"🔍 Found consilium needing synthesis: {repo} ({agent_count} agents)")
+                    self._synthesize_consilium(repo, conn)
+
+            conn.close()
+
+            self.state['last_consilium_check'] = datetime.now().isoformat()
+            self._save_state()
+
+        except Exception as e:
+            self.log(f"⚠️ Consilium check error: {e}")
+
+    def _synthesize_consilium(self, repo, conn):
+        """Synthesize consilium responses for a repo"""
+        self.log(f"🧬 Synthesizing consilium for {repo}...")
+
+        cursor = conn.cursor()
+
+        # Get all responses
+        cursor.execute("""
+            SELECT agent_name, message, timestamp
+            FROM consilium_discussions
+            WHERE repo = ?
+              AND agent_name != 'consilium_scheduler'
+              AND agent_name != 'synthesis'
+            ORDER BY timestamp ASC
+        """, (repo,))
+
+        responses = cursor.fetchall()
+
+        if len(responses) < 2:
+            self.log(f"⚠️ Not enough responses yet ({len(responses)})")
+            return
+
+        # Parse verdicts
+        verdicts = {}
+        for agent_name, message, timestamp in responses:
+            # Simple verdict extraction
+            if '✅ APPROVE' in message or 'APPROVE' in message.upper():
+                verdicts[agent_name] = 'APPROVE'
+            elif '⚠️ CONDITIONAL' in message or 'CONDITIONAL' in message.upper():
+                verdicts[agent_name] = 'CONDITIONAL'
+            elif '❌ REJECT' in message or 'VETO' in message.upper():
+                verdicts[agent_name] = 'REJECT'
+            else:
+                verdicts[agent_name] = 'UNCLEAR'
+
+        self.log(f"   Verdicts: {verdicts}")
+
+        # Calculate consensus
+        approve_count = sum(1 for v in verdicts.values() if v == 'APPROVE')
+        conditional_count = sum(1 for v in verdicts.values() if v == 'CONDITIONAL')
+        reject_count = sum(1 for v in verdicts.values() if v == 'REJECT')
+
+        # Synthesis logic
+        if reject_count > 0:
+            synthesis = f"❌ **CONSILIUM REJECTED**\n\n{reject_count} agent(s) vetoed this proposal."
+        elif approve_count == len(verdicts):
+            synthesis = f"✅ **CONSILIUM APPROVED**\n\nAll {len(verdicts)} agents approve unconditionally."
+        elif approve_count + conditional_count == len(verdicts):
+            synthesis = f"⚠️ **CONDITIONALLY APPROVED**\n\n{approve_count} approve, {conditional_count} conditional. Unified conditions apply."
+        else:
+            synthesis = f"⚠️ **REQUIRES DISCUSSION**\n\nVerdicts unclear or conflicting. Manual review needed."
+
+        # Add agent summary
+        synthesis += f"\n\n**Participants:** {', '.join(verdicts.keys())}"
+        synthesis += f"\n**Timestamp:** {datetime.now().isoformat()}"
+        synthesis += "\n\n— Defender (autonomous synthesis)"
+
+        # Write synthesis to database
+        cursor.execute("""
+            INSERT INTO consilium_discussions (agent_name, message, timestamp, repo, initiator)
+            VALUES (?, ?, ?, ?, ?)
+        """, ('synthesis', synthesis, datetime.now().isoformat(), repo, 'defender_daemon'))
+
+        conn.commit()
+
+        self.log(f"✓ Synthesis complete for {repo}")
+        self.log(f"   Result: {synthesis.split('**')[1]}")
+
+        # Log to autonomous actions
+        self.state['autonomous_actions'].append({
+            'timestamp': datetime.now().isoformat(),
+            'action': 'consilium_synthesis',
+            'repo': repo,
+            'agents': len(verdicts),
+            'result': synthesis.split('**')[1].strip()
+        })
+        self._save_state()
+
     def daemon_loop(self):
         """Main daemon loop"""
         self.log("🛡️ Linux Defender daemon started - POWERHOUSE MODE ACTIVE")
@@ -361,6 +488,11 @@ class LinuxDefenderDaemon:
                 if current_time - last_termux >= CHECK_TERMUX_INTERVAL:
                     self.check_termux_defender()
                     last_termux = current_time
+
+                # Consilium check (synthesize pending discussions)
+                if current_time - last_consilium >= CHECK_CONSILIUM_INTERVAL:
+                    self.check_consilium()
+                    last_consilium = current_time
 
                 # Resonance sync
                 if current_time - last_resonance_sync >= SYNC_RESONANCE_INTERVAL:
