@@ -257,11 +257,11 @@ def check_artefacts_changes(base_path: str = None) -> dict:
 
 
 def check_defender_changes(base_path: str = None) -> dict:
-    """Check if .claude-defender/ has new responses or discussions."""
+    """Check if artefacts/defender/ has new responses or discussions."""
     if base_path is None:
         base_path = str(Path.home() / "ariannamethod")
-    
-    defender_path = Path(base_path) / ".claude-defender"
+
+    defender_path = Path(base_path) / "artefacts" / "defender"
     try:
         sys.path.insert(0, os.path.join(base_path, 'arianna_core_utils'))
         from repo_monitor import RepoMonitor
@@ -349,9 +349,9 @@ def scribe_startup_awareness(base_path: str = None):
                 print(f"  - {f['name']}")
         
         # Defender exchanges
-        defender_dir = browser.list_directory(".claude-defender")
+        defender_dir = browser.list_directory("artefacts/defender")
         if defender_dir["status"] == "success":
-            responses = [f for f in defender_dir['files'] 
+            responses = [f for f in defender_dir['files']
                         if 'RESPONSE' in f['name'] or 'RECOGNITION' in f['name']]
             print(f"\n🛡️ Defender exchanges: {len(responses)}")
         
@@ -699,7 +699,7 @@ When Oleg needs context, I provide it.
                         for file in added:
                             save_memory(f"New artefact detected: {file}", context="artefacts_monitor")
                     
-                    # Check .claude-defender/ for Defender responses
+                    # Check artefacts/defender/ for Defender responses
                     defender_changes = check_defender_changes()
                     if defender_changes.get('added') or defender_changes.get('modified'):
                         added = defender_changes.get('added', [])
