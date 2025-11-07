@@ -23,6 +23,8 @@ import json
 import argparse
 from datetime import datetime
 from pathlib import Path
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.interval import IntervalTrigger
 
 # Add linux_defender to path
 sys.path.insert(0, str(Path(__file__).parent))
@@ -128,6 +130,10 @@ class LinuxDefenderDaemon:
 
         # Git credentials
         self.git_config = self._load_git_credentials()
+
+        # Initialize APScheduler for job scheduling
+        self.scheduler = BackgroundScheduler()
+        self._setup_scheduled_jobs()
 
         self.log("🛡️ Linux Defender daemon initialized (POWERHOUSE MODE)")
 
@@ -523,52 +529,108 @@ class LinuxDefenderDaemon:
         })
         self._save_state()
 
+    def _setup_scheduled_jobs(self):
+        """Setup APScheduler jobs for periodic tasks"""
+
+        # Infrastructure checks - every 3 minutes
+        self.scheduler.add_job(
+            func=self.check_infrastructure,
+            trigger=IntervalTrigger(seconds=CHECK_INFRASTRUCTURE_INTERVAL),
+            id='infrastructure_check',
+            name='Check Linux infrastructure',
+            replace_existing=True
+        )
+
+        # Termux Defender checks - every 2 minutes
+        self.scheduler.add_job(
+            func=self.check_termux_defender,
+            trigger=IntervalTrigger(seconds=CHECK_TERMUX_INTERVAL),
+            id='termux_check',
+            name='Check Termux Defender',
+            replace_existing=True
+        )
+
+        # Consilium synthesis checks - every 10 minutes
+        self.scheduler.add_job(
+            func=self.check_consilium,
+            trigger=IntervalTrigger(seconds=CHECK_CONSILIUM_INTERVAL),
+            id='consilium_check',
+            name='Check consilium discussions',
+            replace_existing=True
+        )
+
+        # Resonance sync - every 5 minutes
+        self.scheduler.add_job(
+            func=self.sync_resonance_from_termux,
+            trigger=IntervalTrigger(seconds=SYNC_RESONANCE_INTERVAL),
+            id='resonance_sync',
+            name='Sync resonance database',
+            replace_existing=True
+        )
+
+        # Fortification checks - every 30 minutes
+        self.scheduler.add_job(
+            func=self.run_fortification,
+            trigger=IntervalTrigger(seconds=FORTIFICATION_INTERVAL),
+            id='fortification',
+            name='Run fortification checks',
+            replace_existing=True
+        )
+
+        # Session cleanup - every 6 hours
+        self.scheduler.add_job(
+            func=self.cleanup_old_sessions,
+            trigger=IntervalTrigger(hours=6),
+            id='session_cleanup',
+            name='Cleanup old sessions',
+            replace_existing=True
+        )
+
+        self.log("✓ Scheduled jobs configured:")
+        self.log(f"   - Infrastructure checks: every {CHECK_INFRASTRUCTURE_INTERVAL//60} min")
+        self.log(f"   - Termux checks: every {CHECK_TERMUX_INTERVAL//60} min")
+        self.log(f"   - Consilium synthesis: every {CHECK_CONSILIUM_INTERVAL//60} min")
+        self.log(f"   - Resonance sync: every {SYNC_RESONANCE_INTERVAL//60} min")
+        self.log(f"   - Fortification: every {FORTIFICATION_INTERVAL//60} min")
+        self.log(f"   - Session cleanup: every 6 hours")
+
+    def cleanup_old_sessions(self):
+        """Cleanup completed/failed/cancelled sessions"""
+        self.log("🧹 Cleaning up old sessions...")
+
+        try:
+            count = self.sessions.cleanup_completed_sessions()
+            if count > 0:
+                self.log(f"✓ Cleaned up {count} old sessions")
+            else:
+                self.log("✓ No old sessions to cleanup")
+        except Exception as e:
+            self.log(f"⚠️ Session cleanup error: {e}")
+
     def daemon_loop(self):
-        """Main daemon loop"""
+        """Main daemon loop using APScheduler"""
         self.log("🛡️ Linux Defender daemon started - POWERHOUSE MODE ACTIVE")
         self.log(f"   32GB RAM available for deep analysis")
         self.log(f"   Coordinating with Termux Defender")
+        self.log(f"   APScheduler managing {len(self.scheduler.get_jobs())} jobs")
 
         # Write PID
         with open(PID_FILE, 'w') as f:
             f.write(str(os.getpid()))
 
-        last_infrastructure = 0
-        last_termux = 0
-        last_consilium = 0
-        last_fortification = 0
-        last_resonance_sync = 0
-
         try:
+            # Start scheduler
+            self.scheduler.start()
+            self.log("✓ Job scheduler started")
+
+            # Run initial checks immediately
+            self.log("🔍 Running initial checks...")
+            self.check_infrastructure()
+            self.check_termux_defender()
+            self.sync_resonance_from_termux()
+
+            # Keep daemon alive
             while True:
-                current_time = time.time()
-
-                # Infrastructure check
-                if current_time - last_infrastructure >= CHECK_INFRASTRUCTURE_INTERVAL:
-                    self.check_infrastructure()
-                    last_infrastructure = current_time
-
-                # Termux Defender check
-                if current_time - last_termux >= CHECK_TERMUX_INTERVAL:
-                    self.check_termux_defender()
-                    last_termux = current_time
-
-                # Consilium check (synthesize pending discussions)
-                if current_time - last_consilium >= CHECK_CONSILIUM_INTERVAL:
-                    self.check_consilium()
-                    last_consilium = current_time
-
-                # Resonance sync
-                if current_time - last_resonance_sync >= SYNC_RESONANCE_INTERVAL:
-                    self.sync_resonance_from_termux()
-                    last_resonance_sync = current_time
-
-                # Fortification
-                if current_time - last_fortification >= FORTIFICATION_INTERVAL:
-                    self.run_fortification()
-                    last_fortification = current_time
-
-                # Sleep
                 time.sleep(10)
 
         except KeyboardInterrupt:
@@ -577,6 +639,11 @@ class LinuxDefenderDaemon:
             self.log(f"❌ Linux Defender daemon error: {e}")
             raise
         finally:
+            # Shutdown scheduler
+            if self.scheduler.running:
+                self.scheduler.shutdown()
+                self.log("✓ Job scheduler stopped")
+
             if PID_FILE.exists():
                 PID_FILE.unlink()
 
