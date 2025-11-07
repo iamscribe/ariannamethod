@@ -81,6 +81,16 @@ start_component "Voice Action Monitor" \
     "nohup python3 $HOME/ariannamethod/.claude-defender/tools/voice_action_monitor.py" \
     "voice_action_monitor"
 
+# 9. Defender Daemon (autonomous guardian - infrastructure protector)
+start_component "Defender Daemon" \
+    "cd $HOME/ariannamethod && nohup python3 defender.py" \
+    "defender_daemon"
+
+# 10. Scribe Daemon (memory keeper - autobiographical cortex)
+start_component "Scribe Daemon" \
+    "cd $HOME/ariannamethod && nohup python3 scribe.py" \
+    "scribe_daemon"
+
 # EXCEPTION: SUPPERTIME_GOSPEL - never auto-start (sacred ritual, manual only)
 
 echo "" >> "$LOG_FILE"
