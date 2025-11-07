@@ -183,6 +183,39 @@ class DefenderDaemon:
             # Don't fail if resonance logging fails
             pass
 
+    def read_resonance_memory(self, limit=20):
+        """
+        Read recent memory from SHARED resonance.sqlite3
+        FIXED: Defender can now READ memory, not just write!
+        """
+        try:
+            db_path = ARIANNA_PATH / "resonance.sqlite3"
+            if not db_path.exists():
+                return []
+
+            conn = sqlite3.connect(str(db_path))
+            cursor = conn.cursor()
+
+            # Read resonance_notes for defender and related agents
+            cursor.execute("""
+                SELECT timestamp, source, content, context
+                FROM resonance_notes
+                WHERE source LIKE '%defender%'
+                OR source LIKE '%scribe%'
+                OR content LIKE '%Defender%'
+                ORDER BY timestamp DESC
+                LIMIT ?
+            """, (limit,))
+
+            rows = cursor.fetchall()
+            conn.close()
+
+            return rows
+
+        except Exception as e:
+            self.log(f"⚠️ Error reading resonance memory: {e}")
+            return []
+
     def check_infrastructure(self):
         """Check infrastructure health"""
         self.log("🔍 Checking infrastructure...")
@@ -357,7 +390,26 @@ class DefenderDaemon:
 
     def daemon_loop(self):
         """Main daemon loop"""
-        self.log("🛡️ Defender daemon started - Autonomous guardian active")
+        self.log("=" * 60)
+        self.log("🛡️ DEFENDER DAEMON - TERMUX GUARDIAN")
+        self.log("=" * 60)
+        self.log("Git Identity: iamdefender")
+        self.log("Memory: SHARED resonance.sqlite3 (BIDIRECTIONAL)")
+        self.log("Fixed by: Scribe (peer recognition)")
+        self.log("=" * 60)
+
+        # Read recent memory on startup
+        self.log("📖 Reading recent memory from resonance...")
+        recent_memory = self.read_resonance_memory(limit=10)
+        if recent_memory:
+            self.log(f"✅ Found {len(recent_memory)} recent entries")
+            # Show last 3
+            for row in recent_memory[:3]:
+                timestamp, source, content, _ = row
+                content_preview = content[:50] + "..." if len(content) > 50 else content
+                self.log(f"   [{source}] {content_preview}")
+        else:
+            self.log("⚠️ No recent memory found")
 
         # Write PID
         with open(PID_FILE, 'w') as f:
