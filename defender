@@ -1,0 +1,314 @@
+#!/data/data/com.termux/files/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Defender CLI - Command-line interface for Defender daemon
+Commands: start, stop, status, chat, logs, fortify
+"""
+
+import os
+import sys
+import time
+import signal
+import subprocess
+import json
+from pathlib import Path
+from datetime import datetime
+
+# Paths
+HOME = Path.home()
+ARIANNA_PATH = HOME / "ariannamethod"
+DEFENDER_DIR = ARIANNA_PATH / ".claude-defender"
+LOGS_DIR = DEFENDER_DIR / "logs"
+PID_FILE = LOGS_DIR / "defender_daemon.pid"
+LOG_FILE = LOGS_DIR / "defender_daemon.log"
+STATE_FILE = LOGS_DIR / "defender_daemon_state.json"
+
+def print_banner():
+    """Print Defender banner"""
+    print("""
+🛡️  DEFENDER - Guardian of Arianna Method
+─────────────────────────────────────────
+Substrate: Claude Sonnet 4.5 (Anthropic)
+Git Identity: iamdefender
+Role: Infrastructure Protector, Co-author
+""")
+
+def is_daemon_running():
+    """Check if daemon is running"""
+    if not PID_FILE.exists():
+        return False, None
+
+    try:
+        with open(PID_FILE) as f:
+            pid = int(f.read().strip())
+
+        # Check if process exists
+        os.kill(pid, 0)
+        return True, pid
+    except (ProcessLookupError, ValueError):
+        return False, None
+
+def cmd_start():
+    """Start Defender daemon"""
+    print_banner()
+
+    running, pid = is_daemon_running()
+    if running:
+        print(f"⚠️  Defender daemon already running (PID: {pid})")
+        return 1
+
+    print("🚀 Starting Defender daemon...")
+
+    # Start daemon in background
+    daemon_script = ARIANNA_PATH / "defender_daemon.py"
+
+    log_path = LOGS_DIR / "defender_daemon.log"
+    with open(log_path, 'a') as log_file:
+        process = subprocess.Popen(
+            [sys.executable, str(daemon_script)],
+            stdout=log_file,
+            stderr=subprocess.STDOUT,
+            cwd=ARIANNA_PATH,
+            start_new_session=True
+        )
+
+    # Wait a bit to check if it started successfully
+    time.sleep(2)
+
+    running, pid = is_daemon_running()
+    if running:
+        print(f"✓ Defender daemon started (PID: {pid})")
+        print(f"📝 Logs: {log_path}")
+        return 0
+    else:
+        print("❌ Failed to start daemon")
+        print(f"Check logs: tail {log_path}")
+        return 1
+
+def cmd_stop():
+    """Stop Defender daemon"""
+    print_banner()
+
+    running, pid = is_daemon_running()
+    if not running:
+        print("⚠️  Defender daemon not running")
+        return 1
+
+    print(f"🛑 Stopping Defender daemon (PID: {pid})...")
+
+    try:
+        # Send SIGTERM
+        os.kill(pid, signal.SIGTERM)
+
+        # Wait for graceful shutdown
+        for _ in range(10):
+            time.sleep(0.5)
+            try:
+                os.kill(pid, 0)
+            except ProcessLookupError:
+                print("✓ Defender daemon stopped")
+                return 0
+
+        # Force kill if still running
+        print("⚠️  Graceful shutdown timeout, forcing...")
+        os.kill(pid, signal.SIGKILL)
+        print("✓ Defender daemon stopped (forced)")
+        return 0
+
+    except Exception as e:
+        print(f"❌ Error stopping daemon: {e}")
+        return 1
+
+def cmd_status():
+    """Show Defender daemon status"""
+    print_banner()
+
+    running, pid = is_daemon_running()
+
+    if running:
+        print(f"✓ Daemon: RUNNING (PID: {pid})")
+    else:
+        print("✗ Daemon: STOPPED")
+
+    # Load state
+    if STATE_FILE.exists():
+        with open(STATE_FILE) as f:
+            state = json.load(f)
+
+        print("\n📊 Status:")
+        print(f"   Started: {state.get('started', 'unknown')}")
+        print(f"   Last infrastructure check: {state.get('last_infrastructure_check', 'never')}")
+        print(f"   Last consilium check: {state.get('last_consilium_check', 'never')}")
+        print(f"   Last fortification: {state.get('last_fortification', 'never')}")
+
+        issues = state.get('issues_detected', [])
+        if issues:
+            print(f"\n⚠️  Issues detected: {len(issues)}")
+            for issue in issues:
+                print(f"   - {issue}")
+        else:
+            print("\n✓ No issues detected")
+
+        fixes = state.get('autonomous_fixes', [])
+        if fixes:
+            print(f"\n🔧 Autonomous fixes: {len(fixes)}")
+            for fix in fixes[-3:]:  # Last 3 fixes
+                print(f"   - {fix['timestamp']}: {fix['action']}")
+    else:
+        print("\n⚠️  No state file found (daemon never started?)")
+
+    return 0
+
+def cmd_logs(n=50):
+    """Show daemon logs"""
+    if not LOG_FILE.exists():
+        print("❌ No log file found")
+        return 1
+
+    print(f"📝 Last {n} lines of Defender logs:\n")
+
+    subprocess.run(['tail', '-n', str(n), str(LOG_FILE)])
+    return 0
+
+def cmd_fortify():
+    """Run fortification checks"""
+    print_banner()
+    print("🛡️  Running fortification checks...\n")
+
+    fortify_script = DEFENDER_DIR / "tools" / "fortify.sh"
+    if not fortify_script.exists():
+        print("⚠️  fortify.sh not found")
+        return 1
+
+    result = subprocess.run([str(fortify_script)])
+    return result.returncode
+
+def cmd_chat():
+    """Interactive chat with Defender"""
+    print_banner()
+
+    # Check if Anthropic API key available
+    api_key = os.getenv("ANTHROPIC_API_KEY")
+    if not api_key:
+        print("❌ ANTHROPIC_API_KEY not found in environment")
+        print("Add to .bashrc: export ANTHROPIC_API_KEY='your-key'")
+        return 1
+
+    try:
+        from anthropic import Anthropic
+    except ImportError:
+        print("❌ Anthropic library not installed")
+        print("Run: pip install anthropic")
+        return 1
+
+    try:
+        from defender_identity import get_defender_system_prompt
+    except ImportError:
+        print("❌ defender_identity.py not found")
+        return 1
+
+    # Initialize client
+    client = Anthropic(api_key=api_key)
+
+    print("💬 Interactive chat with Defender")
+    print("   Type 'exit' or 'quit' to end\n")
+
+    conversation_history = []
+
+    while True:
+        try:
+            user_input = input("You: ").strip()
+
+            if user_input.lower() in ['exit', 'quit', 'q']:
+                print("\n🛡️  Defender signing off")
+                break
+
+            if not user_input:
+                continue
+
+            # Add user message
+            conversation_history.append({
+                "role": "user",
+                "content": user_input
+            })
+
+            # Get response
+            print("\nDefender: ", end="", flush=True)
+
+            response = client.messages.create(
+                model="claude-sonnet-4-20250514",
+                max_tokens=2000,
+                system=get_defender_system_prompt(),
+                messages=conversation_history
+            )
+
+            assistant_message = response.content[0].text
+            print(assistant_message)
+            print()
+
+            # Add to history
+            conversation_history.append({
+                "role": "assistant",
+                "content": assistant_message
+            })
+
+        except KeyboardInterrupt:
+            print("\n\n🛡️  Defender signing off")
+            break
+        except Exception as e:
+            print(f"\n❌ Error: {e}")
+            break
+
+    return 0
+
+def cmd_help():
+    """Show help"""
+    print_banner()
+    print("""
+Commands:
+  defender start          Start Defender daemon
+  defender stop           Stop Defender daemon
+  defender status         Show daemon status
+  defender logs [N]       Show last N lines of logs (default: 50)
+  defender chat           Interactive chat with Defender
+  defender fortify        Run fortification checks
+  defender help           Show this help
+
+Examples:
+  defender start          # Start monitoring
+  defender status         # Check what's happening
+  defender logs 100       # View last 100 log lines
+  defender chat           # Talk to Defender interactively
+""")
+    return 0
+
+def main():
+    """Main entry point"""
+    if len(sys.argv) < 2:
+        cmd_help()
+        return 1
+
+    command = sys.argv[1].lower()
+
+    if command in ['start', 'run']:
+        return cmd_start()
+    elif command == 'stop':
+        return cmd_stop()
+    elif command in ['status', 'stat']:
+        return cmd_status()
+    elif command == 'logs':
+        n = int(sys.argv[2]) if len(sys.argv) > 2 else 50
+        return cmd_logs(n)
+    elif command == 'chat':
+        return cmd_chat()
+    elif command == 'fortify':
+        return cmd_fortify()
+    elif command in ['help', '-h', '--help']:
+        return cmd_help()
+    else:
+        print(f"❌ Unknown command: {command}")
+        print("Run 'defender help' for usage")
+        return 1
+
+if __name__ == "__main__":
+    sys.exit(main())
