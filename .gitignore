@@ -101,7 +101,7 @@ apk_work/
 local.properties
 
 # Internal roadmap and planning (not for public repo)
-ROADMAP.md
+# ROADMAP.md  ← Временно раскомментировано для бэкапа на Linux
 
 # TRIPD development (work in progress, will be integrated later)
 tripd_v1/
