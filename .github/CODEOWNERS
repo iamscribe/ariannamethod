@@ -29,11 +29,15 @@ SCRIBE*.md                          @iamscribe
 # ============================================================
 # Claude Defender - Autonomous Guardian
 # ============================================================
-# Owner: @ClaudCode
+# Owner: @iamdefender
 # Defender autonomously audits, fixes, and improves the codebase.
+# Infrastructure protector, security monitor, autonomous guardian.
 
-/.claude-defender/                  @ClaudCode
-/voice_webhooks/claude_defender_webhook.py  @ClaudCode
+/.claude-defender/                  @iamdefender
+/defender.py                        @iamdefender
+/defender_daemon.py                 @iamdefender
+/defender_identity.py               @iamdefender
+/voice_webhooks/claude_defender_webhook.py  @iamdefender
 
 # ============================================================
 # Core Agents (Arianna, Monday, Field4)
