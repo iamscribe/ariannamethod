@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Rust tools integration for Mac Daemon
-Provides fast file search, safe exec, git info via compiled Rust binaries
+Real Rust tools integration for Mac Daemon
+NO FALLBACKS. NO PLACEHOLDERS. REAL RUST BINARIES ONLY.
 """
 
 import subprocess
@@ -9,72 +9,107 @@ import json
 from pathlib import Path
 from typing import List, Dict, Optional
 
-# Path to postcodex rust binaries (will compile if needed)
-POSTCODEX_RS = Path.home() / "Downloads" / "arianna_clean" / "postcodex" / "codex-rs"
+# Path to compiled Rust binaries
+RUST_BINS = Path(__file__).parent / "rust_bins"
+FILE_SEARCH_BIN = RUST_BINS / "file-search" / "target" / "release" / "codex-file-search"
 
 class RustTools:
-    """Interface to Rust-based tools for Mac daemon"""
+    """Real Rust tools - compiled binaries only"""
     
     def __init__(self):
-        self.file_search_bin = None
-        self.check_tools()
-    
-    def check_tools(self):
-        """Check if Rust tools are available"""
-        # For now, we'll use direct subprocess calls
-        # TODO: Compile Rust binaries if needed
-        pass
+        self.file_search_bin = FILE_SEARCH_BIN
+        if not self.file_search_bin.exists():
+            raise RuntimeError(f"Rust binary not found: {self.file_search_bin}")
     
     def fuzzy_file_search(self, pattern: str, directory: Path, limit: int = 50) -> List[Dict]:
         """
-        Fast fuzzy file search using Rust implementation
+        REAL fuzzy file search using compiled Rust binary
         
-        Args:
-            pattern: Search pattern (fuzzy matching)
-            directory: Directory to search in
-            limit: Max results
-        
-        Returns:
-            List of dicts with 'path' and 'score'
+        Returns list of {'path': str, 'score': int}
+        Raises RuntimeError if binary fails
         """
         try:
-            # For now, fallback to Python implementation
-            # TODO: Use compiled Rust binary when available
-            return self._python_fuzzy_search(pattern, directory, limit)
-        except Exception as e:
-            return []
+            result = subprocess.run(
+                [
+                    str(self.file_search_bin),
+                    pattern,
+                    "--cwd", str(directory),
+                    "--limit", str(limit),
+                    "--json"
+                ],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=True
+            )
+            
+            # Parse JSON lines output
+            matches = []
+            for line in result.stdout.strip().split('\n'):
+                if line:
+                    try:
+                        match = json.loads(line)
+                        # Filter out metadata lines
+                        if 'path' in match and 'score' in match:
+                            matches.append({
+                                'path': match['path'],
+                                'score': match['score']
+                            })
+                    except json.JSONDecodeError:
+                        continue
+            
+            return matches
+            
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError(f"file-search failed: {e.stderr}")
+        except subprocess.TimeoutExpired:
+            raise RuntimeError("file-search timed out")
     
-    def _python_fuzzy_search(self, pattern: str, directory: Path, limit: int) -> List[Dict]:
-        """Fallback Python implementation"""
-        results = []
-        pattern_lower = pattern.lower()
+    def git_status(self, repo_path: Path) -> Optional[Dict]:
+        """
+        Get git status using subprocess (Rust git_info.rs requires async/tokio)
         
-        for path in directory.rglob('*'):
-            if path.is_file() and '.git' not in str(path):
-                name = path.name.lower()
-                if pattern_lower in name:
-                    # Simple scoring: position of match
-                    score = 100 - name.index(pattern_lower)
-                    results.append({
-                        'path': str(path.relative_to(directory)),
-                        'score': score
-                    })
-        
-        # Sort by score and limit
-        results.sort(key=lambda x: x['score'], reverse=True)
-        return results[:limit]
+        Returns: {'branch': str, 'dirty': bool, 'repo_path': str}
+        """
+        try:
+            # Check if it's a git repo
+            git_dir = repo_path / '.git'
+            if not git_dir.exists():
+                return None
+            
+            # Get branch
+            branch_result = subprocess.run(
+                ['git', 'branch', '--show-current'],
+                cwd=str(repo_path),
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+            branch = branch_result.stdout.strip() if branch_result.returncode == 0 else 'unknown'
+            
+            # Check if dirty
+            status_result = subprocess.run(
+                ['git', 'status', '--porcelain'],
+                cwd=str(repo_path),
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+            dirty = len(status_result.stdout.strip()) > 0 if status_result.returncode == 0 else False
+            
+            return {
+                'branch': branch,
+                'dirty': dirty,
+                'repo_path': str(repo_path)
+            }
+        except Exception:
+            return None
     
     def safe_exec(self, command: List[str], cwd: Path, timeout: int = 30) -> Dict:
         """
-        Execute command safely with sandboxing
+        Execute command safely
         
-        Args:
-            command: Command and args
-            cwd: Working directory
-            timeout: Timeout in seconds
-        
-        Returns:
-            Dict with 'stdout', 'stderr', 'returncode'
+        Returns: {'stdout': str, 'stderr': str, 'returncode': int, 'success': bool}
         """
         try:
             result = subprocess.run(
@@ -105,48 +140,3 @@ class RustTools:
                 'returncode': -1,
                 'success': False
             }
-    
-    def git_status(self, repo_path: Path) -> Optional[Dict]:
-        """
-        Get git repository status quickly
-        
-        Args:
-            repo_path: Path to git repository
-        
-        Returns:
-            Dict with 'branch', 'dirty', 'ahead', 'behind' or None
-        """
-        try:
-            # Check if it's a git repo
-            git_dir = repo_path / '.git'
-            if not git_dir.exists():
-                return None
-            
-            # Get branch
-            result = subprocess.run(
-                ['git', 'branch', '--show-current'],
-                cwd=str(repo_path),
-                capture_output=True,
-                text=True,
-                timeout=5
-            )
-            branch = result.stdout.strip() if result.returncode == 0 else 'unknown'
-            
-            # Check if dirty
-            result = subprocess.run(
-                ['git', 'status', '--porcelain'],
-                cwd=str(repo_path),
-                capture_output=True,
-                text=True,
-                timeout=5
-            )
-            dirty = len(result.stdout.strip()) > 0 if result.returncode == 0 else False
-            
-            return {
-                'branch': branch,
-                'dirty': dirty,
-                'repo_path': str(repo_path)
-            }
-        except Exception:
-            return None
-

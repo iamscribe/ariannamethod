@@ -107,7 +107,6 @@ ROADMAP.md
 tripd_v1/
 
 # PostCodex fork (full Rust workspace, anti-censorship guardian)
-postcodex/
 
 # Memory archives - track folder structure, but NOT markdown content
 memory/**/*.md
@@ -137,6 +136,9 @@ mac_daemon/git_tools.py
 mac_daemon/job_queue.py
 mac_daemon/.DS_Store
 mac_daemon/__pycache__/
+
+# Mac daemon Rust compiled binaries (source is committed, binaries are not)
+mac_daemon/rust_bins/**/target/
 
 # Scribe cache files
 .scribe_*_cache.json
