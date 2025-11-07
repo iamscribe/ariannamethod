@@ -344,7 +344,7 @@ class DefenderDaemon:
         """Make autonomous git commit as iamdefender"""
         try:
             # Configure git identity
-            subprocess.run(['git', 'config', 'user.name', 'Defender'], cwd=ARIANNA_PATH, check=True)
+            subprocess.run(['git', 'config', 'user.name', self.git_config['username']], cwd=ARIANNA_PATH, check=True)
             subprocess.run(['git', 'config', 'user.email', self.git_config['email']], cwd=ARIANNA_PATH, check=True)
 
             # Add files
