@@ -65,9 +65,12 @@ LOG_FILE = LOGS_DIR / "linux_defender.log"
 # Intervals (seconds)
 CHECK_INFRASTRUCTURE_INTERVAL = 180  # 3 minutes
 CHECK_TERMUX_INTERVAL = 120  # 2 minutes
-CHECK_CONSILIUM_INTERVAL = 600  # 10 minutes
+CHECK_CONSILIUM_INTERVAL = 600  # 10 minutes - check for PENDING synthesis, NOT create new consilium
 FORTIFICATION_INTERVAL = 1800  # 30 minutes
 SYNC_RESONANCE_INTERVAL = 300  # 5 minutes
+
+# NOTE: New consilium discussions are created by consilium_scheduler (every 3 days)
+# Defender daemon only SYNTHESIZES existing discussions with agent responses
 
 
 class LinuxDefenderDaemon:

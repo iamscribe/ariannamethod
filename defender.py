@@ -106,6 +106,9 @@ class DefenderDaemon:
         # Load Git credentials
         self.git_config = self._load_git_credentials()
 
+        # Set git identity for all commits
+        self._set_git_identity()
+
         self.log("🛡️ Defender daemon initialized")
 
     def _load_config(self):
@@ -132,6 +135,25 @@ class DefenderDaemon:
             'token': self.config.get('defender_github_token', '')
         }
         return git_config
+
+    def _set_git_identity(self):
+        """Set git identity for all commits by this daemon"""
+        try:
+            subprocess.run(
+                ['git', 'config', 'user.name', self.git_config['username']],
+                cwd=ARIANNA_PATH,
+                check=True,
+                capture_output=True
+            )
+            subprocess.run(
+                ['git', 'config', 'user.email', self.git_config['email']],
+                cwd=ARIANNA_PATH,
+                check=True,
+                capture_output=True
+            )
+            self.log(f"✓ Git identity set: {self.git_config['username']} <{self.git_config['email']}>")
+        except Exception as e:
+            self.log(f"⚠️ Failed to set git identity: {e}")
 
     def _load_state(self):
         """Load daemon state"""
