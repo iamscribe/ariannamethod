@@ -34,10 +34,10 @@ PPLX_MODEL = "sonar-pro"
 PPLX_API_URL = "https://api.perplexity.ai/chat/completions"
 TIMEOUT = 30
 
-# Paths
-DB_PATH = Path.home() / "ariannamethod" / "resonance.sqlite3"
-ARTEFACTS_DIR = Path.home() / "ariannamethod" / "artefacts"
-REPO_ROOT = Path.home() / "ariannamethod"
+# Paths - auto-detect repo root
+REPO_ROOT = Path(__file__).parent.parent  # arianna_core_utils/../ = repo root
+DB_PATH = REPO_ROOT / "resonance.sqlite3"
+ARTEFACTS_DIR = REPO_ROOT / "artefacts"
 TERMUX_HISTORY = Path.home() / ".bash_history"
 
 logger = logging.getLogger(__name__)
@@ -256,15 +256,18 @@ def write_to_resonance(digest: str) -> bool:
 
 # ====== SEND TO INTERACTIVE SESSION ======
 def send_to_session(digest: str) -> None:
-    """Send Genesis digest to interactive Monday session if running."""
-
+    """
+    Save Genesis digest to file for Monday session.
+    NO notifications - only file storage and GitHub.
+    """
     # Write to trigger file that monday.py checks (use .tmp/ not /tmp/)
-    trigger_file = Path.home() / "ariannamethod" / ".tmp" / "genesis_monday_message.txt"
+    trigger_file = REPO_ROOT / ".tmp" / "genesis_monday_message.txt"
 
     try:
+        trigger_file.parent.mkdir(parents=True, exist_ok=True)
         with open(trigger_file, 'w', encoding='utf-8') as f:
             f.write(digest)
-        logger.info("✓ Sent to Monday interactive session")
+        logger.info("✓ Saved to Monday trigger file (no notification)")
     except Exception as e:
         logger.warning(f"Failed to write trigger file: {e}")
 

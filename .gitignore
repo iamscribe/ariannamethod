@@ -83,9 +83,9 @@ checkpoints/
 # Termux specific
 nohup.out
 
-# APK builds (NEVER commit - too large)
-*.apk
-*.aab
+# APK builds - source and ready builds are committed
+# *.apk  # Removed - we DO commit ready APKs now
+# *.aab  # Removed - we DO commit ready AABs now
 apk/*/build/
 apk/*/app/build/
 apk/*/.gradle/
