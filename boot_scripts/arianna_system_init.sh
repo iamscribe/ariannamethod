@@ -91,6 +91,11 @@ start_component "Scribe Daemon" \
     "cd $HOME/ariannamethod && nohup python3 scribe.py" \
     "scribe_daemon"
 
+# 11. Consilium Integration Daemon (autonomous code integration from sandbox)
+start_component "Consilium Integration Daemon" \
+    "nohup python3 $HOME/ariannamethod/.claude-defender/tools/consilium_integration_daemon.py --daemon" \
+    "consilium_integration_daemon"
+
 # EXCEPTION: SUPPERTIME_GOSPEL - never auto-start (sacred ritual, manual only)
 
 echo "" >> "$LOG_FILE"

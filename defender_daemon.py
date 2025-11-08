@@ -17,6 +17,15 @@ import json
 from datetime import datetime
 from pathlib import Path
 
+# Import sandbox manager for autonomous integration
+sys.path.insert(0, str(Path(__file__).parent.parent / ".claude-defender" / "tools"))
+try:
+    from consilium_sandbox_manager import ConsiliumSandboxManager
+    SANDBOX_AVAILABLE = True
+except ImportError:
+    SANDBOX_AVAILABLE = False
+    print("⚠️ Sandbox manager not available", file=sys.stderr)
+
 # Import Anthropic
 try:
     from anthropic import Anthropic
@@ -427,14 +436,57 @@ This decision is logged and can be reviewed."""
                         
                         conn.commit()
                         
-                        final_decisions.append({
+                        decision_record = {
                             'repo': repo,
                             'status': status,
                             'summary': summary,
                             'approvals': approvals,
                             'conditionals': conditionals,
                             'rejections': rejections
-                        })
+                        }
+                        final_decisions.append(decision_record)
+                        
+                        # 🔥 AUTO-CREATE SANDBOX IF APPROVED
+                        if status == "✅ APPROVED" and SANDBOX_AVAILABLE:
+                            try:
+                                self.log(f"🔬 Creating sandbox for approved repo: {repo}")
+                                
+                                # Get consilium ID
+                                cursor.execute("""
+                                    SELECT id FROM consilium_discussions
+                                    WHERE repo = ? 
+                                    ORDER BY timestamp DESC 
+                                    LIMIT 1
+                                """, (repo,))
+                                
+                                consilium_row = cursor.fetchone()
+                                consilium_id = consilium_row[0] if consilium_row else None
+                                
+                                # Create sandbox
+                                sandbox_manager = ConsiliumSandboxManager()
+                                sandbox_info = sandbox_manager.create_sandbox(repo, consilium_id)
+                                
+                                if 'error' not in sandbox_info:
+                                    # Success!
+                                    self.log(f"✅ Sandbox created: {sandbox_info['sandbox_path']}")
+                                    
+                                    # Notify user
+                                    self.notify(
+                                        "🔬 Code in Quarantine",
+                                        f"Repository: {repo}\n"
+                                        f"Status: Testing for 48h\n"
+                                        f"Auto-integration if tests pass",
+                                        priority="default"
+                                    )
+                                    
+                                    # Run initial tests
+                                    test_results = sandbox_manager.run_tests_in_sandbox(sandbox_info['id'])
+                                    self.log(f"   Tests started: {test_results.get('syntax_check', 'unknown')}")
+                                else:
+                                    self.log(f"⚠️ Sandbox creation failed: {sandbox_info.get('error')}")
+                                    
+                            except Exception as e:
+                                self.log(f"⚠️ Sandbox auto-creation error: {e}")
             
             conn.close()
             return final_decisions
