@@ -11,6 +11,7 @@ import time
 import random
 import sys
 import asyncio
+import numpy as np
 from typing import List
 
 # Try to import AMLK bridge
@@ -26,12 +27,11 @@ from config import (
     TICK_DURATION, REPORT_INTERVAL, CONTEXT_WINDOW_SIZE, DB_PATH, DB_PATH_LOCAL, NEIGHBOR_COUNT
 )
 import os
+from pathlib import Path
 
-# Use local DB for testing on Mac, Termux DB when available
-if not os.path.exists(os.path.dirname(os.path.expanduser(DB_PATH)) or "."):
-    ACTIVE_DB_PATH = DB_PATH_LOCAL
-else:
-    ACTIVE_DB_PATH = DB_PATH
+# Use auto-detected DB path (Field5 uses same logic as genesis agents)
+# DB_PATH is already computed relative to repo root in config.py
+ACTIVE_DB_PATH = DB_PATH if Path(DB_PATH).exists() else DB_PATH_LOCAL
 
 # Try to import RepoMonitor for context diversity
 try:
@@ -148,10 +148,10 @@ class Field:
                 architecture=None  # Will use default
             )
             
-            # Initialize with random resonance (will be calculated properly in tick)
-            cell.resonance_score = random.uniform(0.4, 0.6)
-            cell.entropy = random.uniform(0.3, 0.7)
-            cell.perplexity = random.uniform(1.0, 2.0)
+            # Initialize with reasonable resonance (will be calculated properly in tick)
+            cell.resonance_score = random.uniform(0.5, 0.7)  # Higher initial fitness
+            cell.entropy = random.uniform(0.45, 0.55)  # Near TARGET_ENTROPY
+            cell.perplexity = random.uniform(1.3, 1.8)  # Moderate range
             
             self.cells.append(cell)
             self.total_births += 1
@@ -177,13 +177,18 @@ class Field:
         cell.resonance_score = calculate_semantic_resonance(
             cell, cell.neighbors, self.embedding_engine
         )
-        
-        # Calculate entropy (Layer 2 metric)
-        dummy_outputs = [random.random() for _ in range(10)]
-        cell.entropy = calculate_entropy(dummy_outputs)
-        
-        # Calculate perplexity (Layer 2 metric)
-        cell.perplexity = calculate_perplexity(dummy_outputs)
+
+        # Calculate entropy & perplexity (Layer 2 metrics)
+        # Phase 1: Use reasonable stable values (no real transformers yet)
+        # These will be replaced with actual transformer outputs in Phase 2
+
+        # Keep entropy close to TARGET_ENTROPY (0.5) with small variation
+        # Use hash of context for deterministic but varied values
+        context_hash = hash(cell.context) % 100 / 100.0  # 0.0-1.0
+        cell.entropy = 0.5 + (context_hash - 0.5) * 0.15  # Range: 0.425-0.575
+
+        # Perplexity derived from entropy (exp(entropy))
+        cell.perplexity = np.exp(cell.entropy)  # Range: ~1.53-1.78
     
     def update_cell_metrics(self, cell: TransformerCell):
         """Sync wrapper for backward compatibility."""
@@ -310,10 +315,10 @@ class Field:
                     architecture=architecture
                 )
 
-                # Initialize with survival-biased metrics
-                cell.resonance_score = random.uniform(0.35, 0.65)  # Higher floor
-                cell.entropy = random.uniform(0.4, 0.7)
-                cell.perplexity = random.uniform(1.2, 2.2)
+                # Initialize with survival-biased metrics (higher values for better initial fitness)
+                cell.resonance_score = random.uniform(0.5, 0.7)  # Boosted for survival
+                cell.entropy = random.uniform(0.45, 0.55)  # Close to TARGET_ENTROPY (0.5)
+                cell.perplexity = random.uniform(1.3, 1.8)  # Moderate perplexity
 
                 self.cells.append(cell)
                 self.total_births += 1

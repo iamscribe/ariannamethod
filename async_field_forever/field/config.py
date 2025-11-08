@@ -33,10 +33,14 @@ NEIGHBOR_COUNT = 5                # How many neighbors to consider
 # Context
 CONTEXT_WINDOW_SIZE = 100         # How many messages to read from resonance.sqlite3
 
-# SQLite
+# SQLite (auto-detect repo root like genesis agents)
 import os
-DB_PATH = os.path.expanduser("~/ariannamethod/resonance.sqlite3")  # Shared memory bus (Termux)
-DB_PATH_LOCAL = "./field_test.sqlite3"  # Local testing on Mac
+from pathlib import Path
+
+# Auto-detect repo root (config.py is in async_field_forever/field5/)
+REPO_ROOT = Path(__file__).parent.parent.parent  # field5/../.. = repo root
+DB_PATH = str(REPO_ROOT / "resonance.sqlite3")  # Shared memory bus
+DB_PATH_LOCAL = "./field_test.sqlite3"  # Local testing fallback
 ENABLE_WAL = True                 # Write-Ahead Logging (reduce blocking)
 
 # Logging
@@ -58,3 +62,23 @@ EMBEDDING_DIM = 100               # Dimensionality of embeddings
 ENABLE_CACHE = True               # Cache compiled transformers
 CACHE_SIZE = 50                   # Max cached transformers
 
+
+# ============================
+# FIELD5 OVERRIDES (Sandbox)
+# ============================
+# Scheduling
+UPDATE_ORDER = "random"   # reshuffle update order each tick
+TICK_BARRIER = True       # compute next-state, then commit (avoid race-deaths)
+
+# Ecology (prepared for chemostat)
+ENERGY_INFLOW = 0.02      # baseline resource per tick
+OUTFLOW_RATE  = 0.01      # soft global decay
+
+# Population guards
+NMIN = 10                 # minimal viable population
+HOF_SIZE = 8              # hall-of-fame seed bank size
+EXTINCTION_COOLDOWN = 5   # ticks before next resurrection
+MAX_DF_DT = 0.6           # kill-switch if population drops >60%/tick
+
+# Mode switch
+FIELD_MODE = "cycles"     # or "steady"

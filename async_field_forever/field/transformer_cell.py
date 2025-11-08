@@ -125,9 +125,10 @@ class MicroTransformer:
         else:
             diversity_penalty = 0.0
         
-        # 5. Novelty bonus (young cells get slight boost to encourage mutation)
-        if self.age < 3:
-            novelty_bonus = 0.1
+        # 5. Novelty bonus (young cells get slight boost - GRADUAL fade-out)
+        # Smooth decay: age 0-5 gradually loses bonus (prevents mass extinction)
+        if self.age < 5:
+            novelty_bonus = 0.05 * (5 - self.age) / 5  # Gradual: 0.05 → 0
         else:
             novelty_bonus = 0.0
         
@@ -166,10 +167,10 @@ class MicroTransformer:
         # Calculate current fitness
         fitness = self.evaluate_fitness()
         self.fitness_history.append(fitness)
-        
+
         # Game of Life rules
         from config import DEATH_THRESHOLD, REPRODUCTION_THRESHOLD
-        
+
         if fitness < DEATH_THRESHOLD:
             # Die
             self.die()
