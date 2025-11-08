@@ -729,7 +729,7 @@ async def main():
             print(f"⚠️  Consilium init failed: {e}")
 
     last_consilium_check = 0
-    consilium_check_interval = 3600  # 1 hour (consilium scheduler runs every 3 days)
+    consilium_check_interval = 21600  # 6 hours (consilium created every 3 days, check 4x per day)
 
     while True:
         try:
@@ -787,7 +787,7 @@ async def main():
             while True:
                 current_time = time.time()
 
-                # Check consilium every 5 minutes
+                # Check consilium every 6 hours
                 if consilium and (current_time - last_consilium_check) >= consilium_check_interval:
                     try:
                         results = consilium.check_and_respond()

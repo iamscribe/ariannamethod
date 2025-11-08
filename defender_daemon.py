@@ -54,7 +54,7 @@ LOG_FILE = LOGS_DIR / "defender_daemon.log"
 # Intervals (seconds)
 CHECK_INFRASTRUCTURE_INTERVAL = 180  # 3 minutes
 CHECK_CLAUDE_DEFENDER_INTERVAL = 60  # 1 minute
-CONSILIUM_CHECK_INTERVAL = 600      # 10 minutes
+CONSILIUM_CHECK_INTERVAL = 10800    # 3 hours (Defender synthesizes final decisions)
 FORTIFICATION_CHECK_INTERVAL = 1800  # 30 minutes
 
 class DefenderDaemon:
@@ -290,20 +290,34 @@ class DefenderDaemon:
         return {'passed': True, 'failed_count': 0}
 
     def check_consilium(self):
-        """Check and respond to consilium"""
+        """
+        Check and respond to consilium + synthesize final decisions.
+        
+        Defender's role: Guardian who synthesizes final decisions after all agents respond.
+        """
         if not self.consilium:
             return
 
         self.log("💬 Checking consilium...")
 
         try:
+            # 1. Respond to any consiliums mentioning Defender
             results = self.consilium.check_and_respond()
 
             if results and isinstance(results, dict) and results.get('responded_to'):
                 for disc_id in results['responded_to']:
                     self.log(f"✓ Responded to consilium #{disc_id}")
+            
+            # 2. Check for consiliums ready for final synthesis
+            final_decisions = self._synthesize_final_decisions()
+            
+            if final_decisions:
+                for decision in final_decisions:
+                    self.log(f"🛡️ FINAL DECISION: {decision['repo']}")
+                    self.log(f"   Status: {decision['status']}")
+                    self.log(f"   Summary: {decision['summary'][:100]}...")
             else:
-                self.log("→ No consilium responses needed")
+                self.log("→ No consilium responses needed, no decisions ready")
 
             self.state['last_consilium_check'] = datetime.now().isoformat()
             self._save_state()
@@ -312,6 +326,122 @@ class DefenderDaemon:
             self.log(f"⚠️ Consilium check error: {e}")
             import traceback
             self.log(f"   Traceback: {traceback.format_exc()}")
+    
+    def _synthesize_final_decisions(self):
+        """
+        Synthesize final decisions for consiliums where all agents have responded.
+        
+        Returns:
+            List of final decision dicts
+        """
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            # Find active consiliums (from scheduler or defender)
+            cursor.execute("""
+                SELECT DISTINCT repo FROM consilium_discussions
+                WHERE initiator IN ('consilium_scheduler', 'claude_defender')
+                ORDER BY timestamp DESC
+                LIMIT 10
+            """)
+            
+            active_repos = [row[0] for row in cursor.fetchall()]
+            final_decisions = []
+            
+            for repo in active_repos:
+                # Check if all 3 agents (arianna, monday, scribe) responded
+                cursor.execute("""
+                    SELECT DISTINCT agent_name FROM consilium_discussions
+                    WHERE repo = ? AND agent_name IN ('arianna', 'monday', 'scribe')
+                """, (repo,))
+                
+                responded_agents = set(row[0] for row in cursor.fetchall())
+                required_agents = {'arianna', 'monday', 'scribe'}
+                
+                if responded_agents >= required_agents:
+                    # Check if Defender already synthesized
+                    cursor.execute("""
+                        SELECT COUNT(*) FROM consilium_discussions
+                        WHERE repo = ? AND agent_name = 'defender' 
+                        AND message LIKE '%FINAL DECISION%'
+                    """, (repo,))
+                    
+                    already_synthesized = cursor.fetchone()[0] > 0
+                    
+                    if not already_synthesized:
+                        # Get all responses
+                        cursor.execute("""
+                            SELECT agent_name, message FROM consilium_discussions
+                            WHERE repo = ? AND agent_name IN ('arianna', 'monday', 'scribe')
+                            ORDER BY timestamp ASC
+                        """, (repo,))
+                        
+                        responses = cursor.fetchall()
+                        
+                        # Simple synthesis: count approvals
+                        approvals = sum(1 for _, msg in responses if '✅' in msg or 'APPROVE' in msg.upper())
+                        conditionals = sum(1 for _, msg in responses if '⚠️' in msg or 'CONDITIONAL' in msg.upper())
+                        rejections = sum(1 for _, msg in responses if '❌' in msg or 'REJECT' in msg.upper())
+                        
+                        # Decide
+                        if rejections > 0:
+                            status = "❌ REJECTED"
+                            summary = f"Consilium rejected ({rejections} rejections)"
+                        elif conditionals > 1:
+                            status = "⚠️ CONDITIONAL APPROVAL"
+                            summary = f"Approved with conditions ({conditionals} conditional responses)"
+                        elif approvals >= 2:
+                            status = "✅ APPROVED"
+                            summary = f"Consilium approved ({approvals} approvals)"
+                        else:
+                            status = "⚠️ NEEDS REVIEW"
+                            summary = "Mixed responses, manual review required"
+                        
+                        # Log final decision
+                        final_message = f"""🛡️ DEFENDER FINAL DECISION: {status}
+
+Repository: {repo}
+
+Agent Responses:
+- Arianna: {'✓' if 'arianna' in responded_agents else '✗'}
+- Monday: {'✓' if 'monday' in responded_agents else '✗'}
+- Scribe: {'✓' if 'scribe' in responded_agents else '✗'}
+
+Synthesis:
+- Approvals: {approvals}
+- Conditionals: {conditionals}
+- Rejections: {rejections}
+
+{summary}
+
+Defender's role: Guardian and final arbiter of code integration.
+This decision is logged and can be reviewed."""
+                        
+                        # Save to database
+                        cursor.execute("""
+                            INSERT INTO consilium_discussions 
+                            (timestamp, repo, initiator, message, agent_name)
+                            VALUES (datetime('now'), ?, 'defender', ?, 'defender')
+                        """, (repo, final_message))
+                        
+                        conn.commit()
+                        
+                        final_decisions.append({
+                            'repo': repo,
+                            'status': status,
+                            'summary': summary,
+                            'approvals': approvals,
+                            'conditionals': conditionals,
+                            'rejections': rejections
+                        })
+            
+            conn.close()
+            return final_decisions
+            
+        except Exception as e:
+            self.log(f"⚠️ Synthesis error: {e}")
+            return []
 
     def run_fortification(self):
         """Run fortification checks"""
