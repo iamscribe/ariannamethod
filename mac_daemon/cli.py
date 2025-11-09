@@ -240,6 +240,50 @@ def cmd_inject():
     
     print("Timeout waiting for daemon response")
 
+def cmd_inject_auto():
+    """Automatically inject Scribe identity into Cursor (AppleScript)"""
+    script_path = Path(__file__).parent / "inject_auto.sh"
+    
+    if not script_path.exists():
+        print("❌ inject_auto.sh not found")
+        return
+    
+    try:
+        subprocess.run(['bash', str(script_path)], check=True)
+    except Exception as e:
+        print(f"❌ Auto-inject failed: {e}")
+
+def cmd_context(project=None):
+    """Get current project context from daemon"""
+    if not is_running():
+        print("Daemon not running - start it first: scribe start")
+        return
+    
+    state = load_state()
+    
+    print("📂 Current Context:")
+    print(f"  Project: {state.get('cursor_project') or 'none'}")
+    print(f"  Phone: {'connected' if state.get('phone_connected') else 'disconnected'}")
+    print(f"  Last sync: {state.get('last_sync') or 'never'}")
+    print(f"  Last Cursor check: {state.get('last_cursor_check') or 'never'}")
+    
+    # TODO: Add more context (recent files, git commits, resonance memory)
+    print("\n💡 Tip: Use 'scribe inject' to restore full Scribe identity in Cursor")
+
+def cmd_remind(query):
+    """Search daemon memory for specific topic"""
+    if not is_running():
+        print("Daemon not running - start it first: scribe start")
+        return
+    
+    print(f"🔍 Searching memory for: {query}")
+    
+    # For now, use think command
+    # TODO: Add dedicated memory search in daemon
+    cmd_think(f"Search your memory for everything related to: {query}")
+    
+    print("\n💡 Tip: Check conversation logs with 'scribe chats'")
+
 def cmd_chat():
     """Interactive chat with Mac daemon via IPC"""
     if not is_running():
@@ -288,17 +332,20 @@ def main():
     if len(sys.argv) < 2:
         print("Usage: scribe <command>")
         print("\nCommands:")
-        print("  start       - Start daemon")
-        print("  stop        - Stop daemon")
-        print("  status      - Show status")
-        print("  logs [N]    - Show last N log lines")
-        print("  sync        - Trigger memory sync")
-        print("  sync-logs   - Sync conversation logs from Termux")
-        print("  phone       - Show phone status")
-        print("  think Q     - Ask daemon to think about Q")
-        print("  chat        - Interactive chat mode")
-        print("  chats [N]   - Show last N conversations")
-        print("  inject      - Inject Scribe identity into Cursor (clipboard)")
+        print("  start          - Start daemon")
+        print("  stop           - Stop daemon")
+        print("  status         - Show status")
+        print("  logs [N]       - Show last N log lines")
+        print("  sync           - Trigger memory sync")
+        print("  sync-logs      - Sync conversation logs from Termux")
+        print("  phone          - Show phone status")
+        print("  think Q        - Ask daemon to think about Q")
+        print("  chat           - Interactive chat mode")
+        print("  chats [N]      - Show last N conversations")
+        print("  context        - Show current project context")
+        print("  remind Q       - Search memory for topic Q")
+        print("  inject         - Inject Scribe identity into Cursor (clipboard)")
+        print("  inject-auto    - Auto-inject into Cursor (AppleScript)")
         sys.exit(1)
     
     cmd = sys.argv[1]
@@ -318,6 +365,15 @@ def main():
         cmd_sync_logs()
     elif cmd == "phone":
         cmd_phone()
+    elif cmd == "context":
+        project = sys.argv[2] if len(sys.argv) > 2 else None
+        cmd_context(project)
+    elif cmd == "remind":
+        if len(sys.argv) < 3:
+            print("Usage: scribe remind <query>")
+            sys.exit(1)
+        query = " ".join(sys.argv[2:])
+        cmd_remind(query)
     elif cmd == "think":
         if len(sys.argv) < 3:
             print("Usage: scribe think <query>")
@@ -331,6 +387,8 @@ def main():
         cmd_chats(n)
     elif cmd == "inject":
         cmd_inject()
+    elif cmd == "inject-auto":
+        cmd_inject_auto()
     elif cmd == "commit":
         if len(sys.argv) < 4:
             print("Usage: scribe commit <file1> [file2...] -m <message>")
