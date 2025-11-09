@@ -271,18 +271,123 @@ def cmd_context(project=None):
     print("\n💡 Tip: Use 'scribe inject' to restore full Scribe identity in Cursor")
 
 def cmd_remind(query):
-    """Search daemon memory for specific topic"""
+    """Search daemon memory for specific topic - REAL search in git/code/resonance"""
     if not is_running():
         print("Daemon not running - start it first: scribe start")
         return
     
-    print(f"🔍 Searching memory for: {query}")
+    print(f"🔍 Searching memory for: '{query}'")
+    print("=" * 60)
     
-    # For now, use think command
-    # TODO: Add dedicated memory search in daemon
-    cmd_think(f"Search your memory for everything related to: {query}")
+    results = {
+        'git_commits': [],
+        'code_matches': [],
+        'resonance_notes': [],
+        'files_found': []
+    }
     
-    print("\n💡 Tip: Check conversation logs with 'scribe chats'")
+    # 1. Search Git commits
+    try:
+        print("\n📦 Git commits:")
+        result = subprocess.run(
+            ['git', 'log', '--grep', query, '--all', '--oneline', '-20'],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            cwd=str(Path.home() / 'Downloads' / 'arianna_clean')
+        )
+        if result.stdout.strip():
+            commits = result.stdout.strip().split('\n')
+            results['git_commits'] = commits
+            for commit in commits[:5]:
+                print(f"  {commit}")
+            if len(commits) > 5:
+                print(f"  ... and {len(commits) - 5} more")
+        else:
+            print("  No commits found")
+    except Exception as e:
+        print(f"  Error: {e}")
+    
+    # 2. Search in code (grep)
+    try:
+        print("\n💻 Code matches:")
+        result = subprocess.run(
+            ['grep', '-r', '-i', '-n', query, 
+             '--include=*.py', '--include=*.md', 
+             str(Path.home() / 'Downloads' / 'arianna_clean')],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        if result.stdout.strip():
+            matches = result.stdout.strip().split('\n')
+            results['code_matches'] = matches
+            for match in matches[:10]:
+                # Shorten paths
+                short_match = match.replace(str(Path.home() / 'Downloads' / 'arianna_clean'), '.')
+                print(f"  {short_match[:100]}")
+            if len(matches) > 10:
+                print(f"  ... and {len(matches) - 10} more matches")
+        else:
+            print("  No code matches found")
+    except Exception as e:
+        print(f"  Error: {e}")
+    
+    # 3. Search resonance.sqlite3 via SSH (Termux)
+    try:
+        print("\n🧠 Resonance memory (Termux):")
+        
+        # Load daemon state to get SSH credentials
+        state_file = Path.home() / ".scribe_mac" / "state.json"
+        if state_file.exists():
+            import json
+            with open(state_file) as f:
+                state = json.load(f)
+            
+            # For now, just show local resonance if exists
+            local_resonance = Path.home() / 'Downloads' / 'arianna_clean' / 'resonance.sqlite3'
+            if local_resonance.exists():
+                import sqlite3
+                conn = sqlite3.connect(str(local_resonance))
+                cursor = conn.cursor()
+                cursor.execute("""
+                    SELECT timestamp, source, content 
+                    FROM resonance_notes 
+                    WHERE content LIKE ? 
+                    ORDER BY timestamp DESC 
+                    LIMIT 10
+                """, (f'%{query}%',))
+                rows = cursor.fetchall()
+                conn.close()
+                
+                if rows:
+                    results['resonance_notes'] = rows
+                    for ts, source, content in rows[:5]:
+                        preview = content[:80].replace('\n', ' ')
+                        print(f"  [{ts[:10]}] {source}: {preview}...")
+                    if len(rows) > 5:
+                        print(f"  ... and {len(rows) - 5} more notes")
+                else:
+                    print("  No resonance notes found")
+            else:
+                print("  Resonance DB not synced locally")
+        else:
+            print("  Daemon state not found")
+    except Exception as e:
+        print(f"  Error: {e}")
+    
+    # 4. Summary
+    print("\n" + "=" * 60)
+    total_results = (len(results['git_commits']) + 
+                    len(results['code_matches']) + 
+                    len(results['resonance_notes']))
+    
+    if total_results > 0:
+        print(f"✅ Found {total_results} results for '{query}'")
+        print("\n💡 Use 'scribe inject' to discuss these findings with Claude")
+    else:
+        print(f"❌ No results found for '{query}'")
+        print("\n💡 Try different search terms or check 'scribe chats'")
 
 def cmd_chat():
     """Interactive chat with Mac daemon via IPC"""
