@@ -211,8 +211,8 @@ def cmd_inject():
     with open(COMMAND_FILE, 'w') as f:
         json.dump({'type': 'inject_cursor'}, f)
     
-    # Wait for response
-    for _ in range(20):
+    # Wait for response (max 30 seconds - daemon checks every 5s)
+    for _ in range(60):
         if RESPONSE_FILE.exists():
             with open(RESPONSE_FILE) as f:
                 resp = json.load(f)

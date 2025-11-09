@@ -826,7 +826,8 @@ And then WAIT for his instructions.
                     self.sync_termux_logs()
                     last_sync = now
                 
-                time.sleep(5)
+                # Sleep 1s (fast CLI response while keeping CPU usage low)
+                time.sleep(1)
         except KeyboardInterrupt:
             self.log("Daemon stopped")
         finally:
