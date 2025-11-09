@@ -6,6 +6,8 @@ Allows Scribe to browse Termux filesystem, monitor changes, explore codebase
 
 import os
 import sys
+import sqlite3
+import json
 from pathlib import Path
 from datetime import datetime
 
@@ -179,6 +181,10 @@ class ScribeFileBrowser:
             monitor = self.monitors[monitor_name]
             changes = monitor.detect_changes()
             
+            # Write insights to resonance if changes detected
+            if any(changes.values()):
+                self._write_insights_to_resonance(monitor_name, changes)
+            
             return {
                 "status": "success",
                 "monitor_name": monitor_name,
@@ -217,6 +223,10 @@ class ScribeFileBrowser:
                         "modified": datetime.fromtimestamp(stat.st_mtime).isoformat()
                     })
             
+            # Write search insights to resonance if significant results
+            if len(matches) > 0:
+                self._write_search_to_resonance(pattern, len(matches), matches[:5])
+            
             return {
                 "status": "success",
                 "pattern": pattern,
@@ -225,6 +235,93 @@ class ScribeFileBrowser:
             }
         except Exception as e:
             return {"status": "error", "message": str(e)}
+    
+    def _write_insights_to_resonance(self, monitor_name: str, changes: dict):
+        """Write file browser insights to resonance.sqlite3"""
+        try:
+            db_path = self.base_path / "resonance.sqlite3"
+            
+            if not db_path.exists():
+                return
+            
+            conn = sqlite3.connect(str(db_path), timeout=10)
+            cursor = conn.cursor()
+            
+            total_changes = sum(len(files) for files in changes.values())
+            content = f"📁 Scribe File Browser: {monitor_name}\n" \
+                     f"Total changes: {total_changes}\n"
+            
+            for change_type, files in changes.items():
+                if files:
+                    content += f"{change_type.upper()}: {len(files)} files\n"
+            
+            context = {
+                "type": "file_browser_insights",
+                "monitor": monitor_name,
+                "total_changes": total_changes,
+                "agent": "scribe"
+            }
+            
+            cursor.execute("""
+                INSERT INTO resonance_notes (timestamp, source, content, context)
+                VALUES (?, ?, ?, ?)
+            """, (
+                datetime.now().isoformat(),
+                "scribe_file_browser",
+                content,
+                json.dumps(context)
+            ))
+            
+            conn.commit()
+            conn.close()
+            
+        except Exception as e:
+            # Don't fail if resonance write fails
+            pass
+    
+    def _write_search_to_resonance(self, pattern: str, count: int, top_matches: list):
+        """Write search results to resonance.sqlite3"""
+        try:
+            db_path = self.base_path / "resonance.sqlite3"
+            
+            if not db_path.exists():
+                return
+            
+            conn = sqlite3.connect(str(db_path), timeout=10)
+            cursor = conn.cursor()
+            
+            content = f"🔍 Scribe File Search\n" \
+                     f"Pattern: {pattern}\n" \
+                     f"Found: {count} files\n"
+            
+            if top_matches:
+                content += "Top matches:\n"
+                for match in top_matches:
+                    content += f"  - {match['name']}\n"
+            
+            context = {
+                "type": "file_search",
+                "pattern": pattern,
+                "count": count,
+                "agent": "scribe"
+            }
+            
+            cursor.execute("""
+                INSERT INTO resonance_notes (timestamp, source, content, context)
+                VALUES (?, ?, ?, ?)
+            """, (
+                datetime.now().isoformat(),
+                "scribe_file_browser",
+                content,
+                json.dumps(context)
+            ))
+            
+            conn.commit()
+            conn.close()
+            
+        except Exception as e:
+            # Don't fail if resonance write fails
+            pass
 
 
 # ====== EXAMPLE USAGE ======
