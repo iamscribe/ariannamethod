@@ -1,0 +1,64 @@
+{
+  "name": "scribe-cursor",
+  "displayName": "Scribe - Memory Keeper for Cursor",
+  "description": "Mac daemon integration for Cursor - memory sync, context injection, resonance access",
+  "version": "0.1.0",
+  "publisher": "ariannamethod",
+  "icon": "icon.png",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "scribe.inject",
+        "title": "Scribe: Inject Identity",
+        "category": "Scribe"
+      },
+      {
+        "command": "scribe.status",
+        "title": "Scribe: Show Status",
+        "category": "Scribe"
+      },
+      {
+        "command": "scribe.sync",
+        "title": "Scribe: Sync Memory",
+        "category": "Scribe"
+      },
+      {
+        "command": "scribe.remind",
+        "title": "Scribe: Remind (Search Memory)",
+        "category": "Scribe"
+      },
+      {
+        "command": "scribe.chat",
+        "title": "Scribe: Open Chat",
+        "category": "Scribe"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "scribe.inject",
+        "key": "cmd+shift+s",
+        "mac": "cmd+shift+s",
+        "when": "editorTextFocus"
+      }
+    ]
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "pretest": "npm run lint"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.80.0",
+    "eslint": "^8.0.0"
+  }
+}
+
