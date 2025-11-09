@@ -3,7 +3,7 @@
 ## ✅ РАЗРЕШЁННЫЕ уведомления:
 
 ### 1. Field Metrics (async_field_forever)
-- **Источник:** `field5/notifications.py`
+- **Источник:** `field/notifications.py`
 - **Содержание:** 
   - Популяция (cell_count)
   - Средний резонанс (avg_resonance)
@@ -67,7 +67,7 @@ def send_to_session(digest: str):
 
 **Field metrics остаются:**
 ```python
-# field5/notifications.py
+# field/notifications.py
 send_termux_notification(title, content, priority)
 # Rate limited, emergency-aware
 ```

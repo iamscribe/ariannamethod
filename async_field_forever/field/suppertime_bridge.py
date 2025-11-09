@@ -14,7 +14,7 @@ from pathlib import Path
 from datetime import datetime
 from typing import Dict, List, Optional
 
-# Auto-detect repo root (field5/../../ = repo root)
+# Auto-detect repo root (field/../../ = repo root)
 REPO_ROOT = Path(__file__).parent.parent.parent
 RESONANCE_DB = REPO_ROOT / "resonance.sqlite3"
 

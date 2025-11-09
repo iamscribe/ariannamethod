@@ -23,10 +23,10 @@ Quick access to Field5, Visualizer, and Genesis from your home screen! 🎯
 ## 📱 Available Widgets
 
 ### 1. Field Status
-Check if Field5 is running, start/stop/visualize it
+Check if Field is running, start/stop/visualize it
 
 ### 2. Field Visualizer
-Launch hybrid visualizer directly (field_visualiser_hybrid2.py)
+Launch hybrid visualizer directly (field_visualiser_hybrid.py)
 
 ### 3. Genesis Status
 Check Arianna/Monday daemons, read latest digests

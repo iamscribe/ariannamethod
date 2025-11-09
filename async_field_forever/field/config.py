@@ -37,8 +37,8 @@ CONTEXT_WINDOW_SIZE = 100         # How many messages to read from resonance.sql
 import os
 from pathlib import Path
 
-# Auto-detect repo root (config.py is in async_field_forever/field5/)
-REPO_ROOT = Path(__file__).parent.parent.parent  # field5/../.. = repo root
+# Auto-detect repo root (config.py is in async_field_forever/field/)
+REPO_ROOT = Path(__file__).parent.parent.parent  # field/../.. = repo root
 DB_PATH = str(REPO_ROOT / "resonance.sqlite3")  # Shared memory bus
 DB_PATH_LOCAL = "./field_test.sqlite3"  # Local testing fallback
 ENABLE_WAL = True                 # Write-Ahead Logging (reduce blocking)
