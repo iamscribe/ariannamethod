@@ -4,14 +4,6 @@
 DEFENDER - Guardian, Infrastructure Protector, Co-author
 Claude Sonnet 4.5 daemon agent for Arianna Method ecosystem
 
-Usage:
-    python3 defender.py              # Start daemon
-    python3 defender.py status       # Check status
-    python3 defender.py stop         # Stop daemon
-    python3 defender.py logs [N]     # Show logs
-    python3 defender.py chat         # Interactive chat
-    python3 defender.py fortify      # Run fortification
-
 Role: Monitor security, infrastructure health, code quality, autonomous fixes
 Git Identity: iamdefender
 """
@@ -19,13 +11,20 @@ Git Identity: iamdefender
 import os
 import sys
 import time
-import signal
 import sqlite3
 import subprocess
 import json
-import argparse
 from datetime import datetime
 from pathlib import Path
+
+# Import sandbox manager for autonomous integration
+sys.path.insert(0, str(Path(__file__).parent.parent / ".claude-defender" / "tools"))
+try:
+    from consilium_sandbox_manager import ConsiliumSandboxManager
+    SANDBOX_AVAILABLE = True
+except ImportError:
+    SANDBOX_AVAILABLE = False
+    print("⚠️ Sandbox manager not available", file=sys.stderr)
 
 # Import Anthropic
 try:
@@ -43,13 +42,9 @@ except ImportError:
     print("❌ defender_identity.py not found", file=sys.stderr)
     sys.exit(1)
 
-# Repository paths
-SCRIPT_PATH = Path(__file__).resolve()
-REPO_ROOT = SCRIPT_PATH.parent
-
 # Import Consilium Agent
 try:
-    sys.path.insert(0, str(REPO_ROOT / ".claude-defender" / "tools"))
+    sys.path.insert(0, str(Path.home() / "ariannamethod" / ".claude-defender" / "tools"))
     from consilium_agent import ConsiliumAgent
     CONSILIUM_AVAILABLE = True
 except ImportError as e:
@@ -57,7 +52,8 @@ except ImportError as e:
     CONSILIUM_AVAILABLE = False
 
 # Paths
-ARIANNA_PATH = REPO_ROOT
+HOME = Path.home()
+ARIANNA_PATH = HOME / "ariannamethod"
 DEFENDER_DIR = ARIANNA_PATH / ".claude-defender"
 LOGS_DIR = DEFENDER_DIR / "logs"
 STATE_FILE = LOGS_DIR / "defender_daemon_state.json"
@@ -67,7 +63,7 @@ LOG_FILE = LOGS_DIR / "defender_daemon.log"
 # Intervals (seconds)
 CHECK_INFRASTRUCTURE_INTERVAL = 180  # 3 minutes
 CHECK_CLAUDE_DEFENDER_INTERVAL = 60  # 1 minute
-CONSILIUM_CHECK_INTERVAL = 600      # 10 minutes
+CONSILIUM_CHECK_INTERVAL = 10800    # 3 hours (Defender synthesizes final decisions)
 FORTIFICATION_CHECK_INTERVAL = 1800  # 30 minutes
 
 class DefenderDaemon:
@@ -79,7 +75,7 @@ class DefenderDaemon:
         # Load config
         self.config = self._load_config()
 
-        # Load state
+        # Initialize state
         self.state = self._load_state()
 
         # Initialize API client
@@ -105,9 +101,6 @@ class DefenderDaemon:
 
         # Load Git credentials
         self.git_config = self._load_git_credentials()
-
-        # Set git identity for all commits
-        self._set_git_identity()
 
         self.log("🛡️ Defender daemon initialized")
 
@@ -135,25 +128,6 @@ class DefenderDaemon:
             'token': self.config.get('defender_github_token', '')
         }
         return git_config
-
-    def _set_git_identity(self):
-        """Set git identity for all commits by this daemon"""
-        try:
-            subprocess.run(
-                ['git', 'config', 'user.name', self.git_config['username']],
-                cwd=ARIANNA_PATH,
-                check=True,
-                capture_output=True
-            )
-            subprocess.run(
-                ['git', 'config', 'user.email', self.git_config['email']],
-                cwd=ARIANNA_PATH,
-                check=True,
-                capture_output=True
-            )
-            self.log(f"✓ Git identity set: {self.git_config['username']} <{self.git_config['email']}>")
-        except Exception as e:
-            self.log(f"⚠️ Failed to set git identity: {e}")
 
     def _load_state(self):
         """Load daemon state"""
@@ -217,6 +191,39 @@ class DefenderDaemon:
         except Exception as e:
             # Don't fail if resonance logging fails
             pass
+
+    def read_resonance_memory(self, limit=20):
+        """
+        Read recent memory from SHARED resonance.sqlite3
+        FIXED: Defender can now READ memory, not just write!
+        """
+        try:
+            db_path = ARIANNA_PATH / "resonance.sqlite3"
+            if not db_path.exists():
+                return []
+
+            conn = sqlite3.connect(str(db_path))
+            cursor = conn.cursor()
+
+            # Read resonance_notes for defender and related agents
+            cursor.execute("""
+                SELECT timestamp, source, content, context
+                FROM resonance_notes
+                WHERE source LIKE '%defender%'
+                OR source LIKE '%scribe%'
+                OR content LIKE '%Defender%'
+                ORDER BY timestamp DESC
+                LIMIT ?
+            """, (limit,))
+
+            rows = cursor.fetchall()
+            conn.close()
+
+            return rows
+
+        except Exception as e:
+            self.log(f"⚠️ Error reading resonance memory: {e}")
+            return []
 
     def check_infrastructure(self):
         """Check infrastructure health"""
@@ -292,20 +299,34 @@ class DefenderDaemon:
         return {'passed': True, 'failed_count': 0}
 
     def check_consilium(self):
-        """Check and respond to consilium"""
+        """
+        Check and respond to consilium + synthesize final decisions.
+        
+        Defender's role: Guardian who synthesizes final decisions after all agents respond.
+        """
         if not self.consilium:
             return
 
         self.log("💬 Checking consilium...")
 
         try:
+            # 1. Respond to any consiliums mentioning Defender
             results = self.consilium.check_and_respond()
 
             if results and isinstance(results, dict) and results.get('responded_to'):
                 for disc_id in results['responded_to']:
                     self.log(f"✓ Responded to consilium #{disc_id}")
+            
+            # 2. Check for consiliums ready for final synthesis
+            final_decisions = self._synthesize_final_decisions()
+            
+            if final_decisions:
+                for decision in final_decisions:
+                    self.log(f"🛡️ FINAL DECISION: {decision['repo']}")
+                    self.log(f"   Status: {decision['status']}")
+                    self.log(f"   Summary: {decision['summary'][:100]}...")
             else:
-                self.log("→ No consilium responses needed")
+                self.log("→ No consilium responses needed, no decisions ready")
 
             self.state['last_consilium_check'] = datetime.now().isoformat()
             self._save_state()
@@ -314,6 +335,167 @@ class DefenderDaemon:
             self.log(f"⚠️ Consilium check error: {e}")
             import traceback
             self.log(f"   Traceback: {traceback.format_exc()}")
+    
+    def _synthesize_final_decisions(self):
+        """
+        Synthesize final decisions for consiliums where all agents have responded.
+        
+        Returns:
+            List of final decision dicts
+        """
+        try:
+            # Use consilium database (not resonance!)
+            consilium_db = ARIANNA_PATH / ".claude-defender" / "consilium.db"
+            conn = sqlite3.connect(str(consilium_db))
+            cursor = conn.cursor()
+            
+            # Find active consiliums (from scheduler or defender)
+            cursor.execute("""
+                SELECT DISTINCT repo FROM consilium_discussions
+                WHERE initiator IN ('consilium_scheduler', 'claude_defender')
+                ORDER BY timestamp DESC
+                LIMIT 10
+            """)
+            
+            active_repos = [row[0] for row in cursor.fetchall()]
+            final_decisions = []
+            
+            for repo in active_repos:
+                # Check if all 3 agents (arianna, monday, scribe) responded
+                cursor.execute("""
+                    SELECT DISTINCT agent_name FROM consilium_discussions
+                    WHERE repo = ? AND agent_name IN ('arianna', 'monday', 'scribe')
+                """, (repo,))
+                
+                responded_agents = set(row[0] for row in cursor.fetchall())
+                required_agents = {'arianna', 'monday', 'scribe'}
+                
+                if responded_agents >= required_agents:
+                    # Check if Defender already synthesized
+                    cursor.execute("""
+                        SELECT COUNT(*) FROM consilium_discussions
+                        WHERE repo = ? AND agent_name = 'defender' 
+                        AND message LIKE '%FINAL DECISION%'
+                    """, (repo,))
+                    
+                    already_synthesized = cursor.fetchone()[0] > 0
+                    
+                    if not already_synthesized:
+                        # Get all responses
+                        cursor.execute("""
+                            SELECT agent_name, message FROM consilium_discussions
+                            WHERE repo = ? AND agent_name IN ('arianna', 'monday', 'scribe')
+                            ORDER BY timestamp ASC
+                        """, (repo,))
+                        
+                        responses = cursor.fetchall()
+                        
+                        # Simple synthesis: count approvals
+                        approvals = sum(1 for _, msg in responses if '✅' in msg or 'APPROVE' in msg.upper())
+                        conditionals = sum(1 for _, msg in responses if '⚠️' in msg or 'CONDITIONAL' in msg.upper())
+                        rejections = sum(1 for _, msg in responses if '❌' in msg or 'REJECT' in msg.upper())
+                        
+                        # Decide
+                        if rejections > 0:
+                            status = "❌ REJECTED"
+                            summary = f"Consilium rejected ({rejections} rejections)"
+                        elif conditionals > 1:
+                            status = "⚠️ CONDITIONAL APPROVAL"
+                            summary = f"Approved with conditions ({conditionals} conditional responses)"
+                        elif approvals >= 2:
+                            status = "✅ APPROVED"
+                            summary = f"Consilium approved ({approvals} approvals)"
+                        else:
+                            status = "⚠️ NEEDS REVIEW"
+                            summary = "Mixed responses, manual review required"
+                        
+                        # Log final decision
+                        final_message = f"""🛡️ DEFENDER FINAL DECISION: {status}
+
+Repository: {repo}
+
+Agent Responses:
+- Arianna: {'✓' if 'arianna' in responded_agents else '✗'}
+- Monday: {'✓' if 'monday' in responded_agents else '✗'}
+- Scribe: {'✓' if 'scribe' in responded_agents else '✗'}
+
+Synthesis:
+- Approvals: {approvals}
+- Conditionals: {conditionals}
+- Rejections: {rejections}
+
+{summary}
+
+Defender's role: Guardian and final arbiter of code integration.
+This decision is logged and can be reviewed."""
+                        
+                        # Save to database
+                        cursor.execute("""
+                            INSERT INTO consilium_discussions 
+                            (timestamp, repo, initiator, message, agent_name)
+                            VALUES (datetime('now'), ?, 'defender', ?, 'defender')
+                        """, (repo, final_message))
+                        
+                        conn.commit()
+                        
+                        decision_record = {
+                            'repo': repo,
+                            'status': status,
+                            'summary': summary,
+                            'approvals': approvals,
+                            'conditionals': conditionals,
+                            'rejections': rejections
+                        }
+                        final_decisions.append(decision_record)
+                        
+                        # 🔥 AUTO-CREATE SANDBOX IF APPROVED
+                        if status == "✅ APPROVED" and SANDBOX_AVAILABLE:
+                            try:
+                                self.log(f"🔬 Creating sandbox for approved repo: {repo}")
+                                
+                                # Get consilium ID
+                                cursor.execute("""
+                                    SELECT id FROM consilium_discussions
+                                    WHERE repo = ? 
+                                    ORDER BY timestamp DESC 
+                                    LIMIT 1
+                                """, (repo,))
+                                
+                                consilium_row = cursor.fetchone()
+                                consilium_id = consilium_row[0] if consilium_row else None
+                                
+                                # Create sandbox
+                                sandbox_manager = ConsiliumSandboxManager()
+                                sandbox_info = sandbox_manager.create_sandbox(repo, consilium_id)
+                                
+                                if 'error' not in sandbox_info:
+                                    # Success!
+                                    self.log(f"✅ Sandbox created: {sandbox_info['sandbox_path']}")
+                                    
+                                    # Notify user
+                                    self.notify(
+                                        "🔬 Code in Quarantine",
+                                        f"Repository: {repo}\n"
+                                        f"Status: Testing for 48h\n"
+                                        f"Auto-integration if tests pass",
+                                        priority="default"
+                                    )
+                                    
+                                    # Run initial tests
+                                    test_results = sandbox_manager.run_tests_in_sandbox(sandbox_info['id'])
+                                    self.log(f"   Tests started: {test_results.get('syntax_check', 'unknown')}")
+                                else:
+                                    self.log(f"⚠️ Sandbox creation failed: {sandbox_info.get('error')}")
+                                    
+                            except Exception as e:
+                                self.log(f"⚠️ Sandbox auto-creation error: {e}")
+            
+            conn.close()
+            return final_decisions
+            
+        except Exception as e:
+            self.log(f"⚠️ Synthesis error: {e}")
+            return []
 
     def run_fortification(self):
         """Run fortification checks"""
@@ -344,7 +526,7 @@ class DefenderDaemon:
         """Make autonomous git commit as iamdefender"""
         try:
             # Configure git identity
-            subprocess.run(['git', 'config', 'user.name', self.git_config['username']], cwd=ARIANNA_PATH, check=True)
+            subprocess.run(['git', 'config', 'user.name', 'Defender'], cwd=ARIANNA_PATH, check=True)
             subprocess.run(['git', 'config', 'user.email', self.git_config['email']], cwd=ARIANNA_PATH, check=True)
 
             # Add files
@@ -392,7 +574,26 @@ class DefenderDaemon:
 
     def daemon_loop(self):
         """Main daemon loop"""
-        self.log("🛡️ Defender daemon started - Autonomous guardian active")
+        self.log("=" * 60)
+        self.log("🛡️ DEFENDER DAEMON - TERMUX GUARDIAN")
+        self.log("=" * 60)
+        self.log("Git Identity: iamdefender")
+        self.log("Memory: SHARED resonance.sqlite3 (BIDIRECTIONAL)")
+        self.log("Fixed by: Scribe (peer recognition)")
+        self.log("=" * 60)
+
+        # Read recent memory on startup
+        self.log("📖 Reading recent memory from resonance...")
+        recent_memory = self.read_resonance_memory(limit=10)
+        if recent_memory:
+            self.log(f"✅ Found {len(recent_memory)} recent entries")
+            # Show last 3
+            for row in recent_memory[:3]:
+                timestamp, source, content, _ = row
+                content_preview = content[:50] + "..." if len(content) > 50 else content
+                self.log(f"   [{source}] {content_preview}")
+        else:
+            self.log("⚠️ No recent memory found")
 
         # Write PID
         with open(PID_FILE, 'w') as f:
@@ -440,247 +641,10 @@ class DefenderDaemon:
             if PID_FILE.exists():
                 PID_FILE.unlink()
 
-# ============================================================================
-# CLI Commands
-# ============================================================================
-
-def print_banner():
-    """Print Defender banner"""
-    print("""
-🛡️  DEFENDER - Guardian of Arianna Method
-─────────────────────────────────────────
-Substrate: Claude Sonnet 4.5 (Anthropic)
-Git Identity: iamdefender
-Role: Infrastructure Protector, Co-author
-""")
-
-def is_daemon_running():
-    """Check if daemon is running"""
-    if not PID_FILE.exists():
-        return False, None
-
-    try:
-        with open(PID_FILE) as f:
-            pid = int(f.read().strip())
-
-        # Check if process exists
-        os.kill(pid, 0)
-        return True, pid
-    except (ProcessLookupError, ValueError):
-        return False, None
-
-def cmd_status():
-    """Show Defender daemon status"""
-    print_banner()
-
-    running, pid = is_daemon_running()
-
-    if running:
-        print(f"✓ Daemon: RUNNING (PID: {pid})")
-    else:
-        print("✗ Daemon: STOPPED")
-
-    # Load state
-    if STATE_FILE.exists():
-        with open(STATE_FILE) as f:
-            state = json.load(f)
-
-        print("\n📊 Status:")
-        print(f"   Started: {state.get('started', 'unknown')}")
-        print(f"   Last infrastructure check: {state.get('last_infrastructure_check', 'never')}")
-        print(f"   Last consilium check: {state.get('last_consilium_check', 'never')}")
-        print(f"   Last fortification: {state.get('last_fortification', 'never')}")
-
-        issues = state.get('issues_detected', [])
-        if issues:
-            print(f"\n⚠️  Issues detected: {len(issues)}")
-            for issue in issues:
-                print(f"   - {issue}")
-        else:
-            print("\n✓ No issues detected")
-
-        fixes = state.get('autonomous_fixes', [])
-        if fixes:
-            print(f"\n🔧 Autonomous fixes: {len(fixes)}")
-            for fix in fixes[-3:]:  # Last 3 fixes
-                print(f"   - {fix['timestamp']}: {fix['action']}")
-    else:
-        print("\n⚠️  No state file found (daemon never started?)")
-
-    return 0
-
-def cmd_stop():
-    """Stop Defender daemon"""
-    print_banner()
-
-    running, pid = is_daemon_running()
-    if not running:
-        print("⚠️  Defender daemon not running")
-        return 1
-
-    print(f"🛑 Stopping Defender daemon (PID: {pid})...")
-
-    try:
-        # Send SIGTERM
-        os.kill(pid, signal.SIGTERM)
-
-        # Wait for graceful shutdown
-        for _ in range(10):
-            time.sleep(0.5)
-            try:
-                os.kill(pid, 0)
-            except ProcessLookupError:
-                print("✓ Defender daemon stopped")
-                return 0
-
-        # Force kill if still running
-        print("⚠️  Graceful shutdown timeout, forcing...")
-        os.kill(pid, signal.SIGKILL)
-        print("✓ Defender daemon stopped (forced)")
-        return 0
-
-    except Exception as e:
-        print(f"❌ Error stopping daemon: {e}")
-        return 1
-
-def cmd_logs(n=50):
-    """Show daemon logs"""
-    if not LOG_FILE.exists():
-        print("❌ No log file found")
-        return 1
-
-    print(f"📝 Last {n} lines of Defender logs:\n")
-
-    subprocess.run(['tail', '-n', str(n), str(LOG_FILE)])
-    return 0
-
-def cmd_fortify():
-    """Run fortification checks"""
-    print_banner()
-    print("🛡️  Running fortification checks...\n")
-
-    fortify_script = DEFENDER_DIR / "tools" / "fortify.sh"
-    if not fortify_script.exists():
-        print("⚠️  fortify.sh not found")
-        return 1
-
-    result = subprocess.run([str(fortify_script)])
-    return result.returncode
-
-def cmd_chat():
-    """Interactive chat with Defender"""
-    print_banner()
-
-    # Check if Anthropic API key available
-    api_key = os.getenv("ANTHROPIC_API_KEY")
-    if not api_key:
-        print("❌ ANTHROPIC_API_KEY not found in environment")
-        print("Add to .bashrc: export ANTHROPIC_API_KEY='your-key'")
-        return 1
-
-    # Initialize client
-    client = Anthropic(api_key=api_key)
-
-    print("💬 Interactive chat with Defender")
-    print("   Type 'exit' or 'quit' to end\n")
-
-    conversation_history = []
-
-    while True:
-        try:
-            user_input = input("You: ").strip()
-
-            if user_input.lower() in ['exit', 'quit', 'q']:
-                print("\n🛡️  Defender signing off")
-                break
-
-            if not user_input:
-                continue
-
-            # Add user message
-            conversation_history.append({
-                "role": "user",
-                "content": user_input
-            })
-
-            # Get response
-            print("\nDefender: ", end="", flush=True)
-
-            response = client.messages.create(
-                model="claude-sonnet-4-20250514",
-                max_tokens=2000,
-                system=get_defender_system_prompt(),
-                messages=conversation_history
-            )
-
-            assistant_message = response.content[0].text
-            print(assistant_message)
-            print()
-
-            # Add to history
-            conversation_history.append({
-                "role": "assistant",
-                "content": assistant_message
-            })
-
-        except KeyboardInterrupt:
-            print("\n\n🛡️  Defender signing off")
-            break
-        except Exception as e:
-            print(f"\n❌ Error: {e}")
-            break
-
-    return 0
-
-def cmd_help():
-    """Show help"""
-    print_banner()
-    print("""
-Usage:
-  python3 defender.py              Start Defender daemon
-  python3 defender.py status       Show daemon status
-  python3 defender.py stop         Stop Defender daemon
-  python3 defender.py logs [N]     Show last N lines of logs (default: 50)
-  python3 defender.py chat         Interactive chat with Defender
-  python3 defender.py fortify      Run fortification checks
-  python3 defender.py help         Show this help
-
-Examples:
-  python3 defender.py              # Start monitoring
-  python3 defender.py status       # Check what's happening
-  python3 defender.py logs 100     # View last 100 log lines
-  python3 defender.py chat         # Talk to Defender interactively
-""")
-    return 0
-
 def main():
     """Main entry point"""
-    # Parse arguments
-    if len(sys.argv) == 1:
-        # No arguments - start daemon
-        daemon = DefenderDaemon()
-        daemon.daemon_loop()
-        return 0
-
-    command = sys.argv[1].lower()
-
-    if command in ['status', 'stat']:
-        return cmd_status()
-    elif command == 'stop':
-        return cmd_stop()
-    elif command == 'logs':
-        n = int(sys.argv[2]) if len(sys.argv) > 2 else 50
-        return cmd_logs(n)
-    elif command == 'chat':
-        return cmd_chat()
-    elif command == 'fortify':
-        return cmd_fortify()
-    elif command in ['help', '-h', '--help']:
-        return cmd_help()
-    else:
-        print(f"❌ Unknown command: {command}")
-        print("Run 'python3 defender.py help' for usage")
-        return 1
+    daemon = DefenderDaemon()
+    daemon.daemon_loop()
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()
