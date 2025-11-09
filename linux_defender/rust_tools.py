@@ -2,6 +2,10 @@
 """
 Rust Tools Integration for Linux Defender
 High-performance file search, git operations, and safe execution using compiled Rust binaries
+
+NOTE: This module is PREPARED but not yet actively used by linux_defender_daemon.py.
+      Rust binaries from labs/repos/claude-agent-daemon are available when needed.
+      Future integration: session isolation, parallel task execution, heavy file operations.
 """
 
 import subprocess

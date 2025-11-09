@@ -66,6 +66,10 @@ scribe sync-logs      # Sync Termux conversation logs
 scribe chat           # Interactive chat mode
 scribe think "query"  # Single question
 scribe chats 10       # View conversation history
+
+# Cursor Integration
+scribe inject         # Inject Scribe identity into Cursor (clipboard)
+                      # See CURSOR_INJECT.md for details
 ```
 
 ## Interactive Chat

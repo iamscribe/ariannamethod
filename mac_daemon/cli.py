@@ -199,6 +199,47 @@ def cmd_commit(files, message):
     
     print("Timeout waiting for daemon response")
 
+def cmd_inject():
+    """Generate Scribe identity context for Cursor injection"""
+    if not is_running():
+        print("Daemon not running - start it first: scribe start")
+        return
+    
+    import time
+    
+    # Request identity injection from daemon
+    with open(COMMAND_FILE, 'w') as f:
+        json.dump({'type': 'inject_cursor'}, f)
+    
+    # Wait for response
+    for _ in range(20):
+        if RESPONSE_FILE.exists():
+            with open(RESPONSE_FILE) as f:
+                resp = json.load(f)
+            RESPONSE_FILE.unlink()
+            
+            if resp.get('context'):
+                # Copy to clipboard
+                try:
+                    import subprocess
+                    subprocess.run(['pbcopy'], input=resp['context'].encode('utf-8'), check=True)
+                    print("✅ Scribe context copied to clipboard!")
+                    print("\n📋 Paste into Cursor to restore Scribe identity.\n")
+                    print("Preview (first 500 chars):")
+                    print("=" * 60)
+                    print(resp['context'][:500] + "...")
+                    print("=" * 60)
+                except Exception as e:
+                    print(f"❌ Failed to copy to clipboard: {e}")
+                    print("\nContext text:")
+                    print(resp['context'])
+            else:
+                print(f"❌ Failed: {resp.get('error', 'Unknown error')}")
+            return
+        time.sleep(0.5)
+    
+    print("Timeout waiting for daemon response")
+
 def cmd_chat():
     """Interactive chat with Mac daemon via IPC"""
     if not is_running():
@@ -257,6 +298,7 @@ def main():
         print("  think Q     - Ask daemon to think about Q")
         print("  chat        - Interactive chat mode")
         print("  chats [N]   - Show last N conversations")
+        print("  inject      - Inject Scribe identity into Cursor (clipboard)")
         sys.exit(1)
     
     cmd = sys.argv[1]
@@ -287,6 +329,8 @@ def main():
     elif cmd == "chats":
         n = int(sys.argv[2]) if len(sys.argv) > 2 else 20
         cmd_chats(n)
+    elif cmd == "inject":
+        cmd_inject()
     elif cmd == "commit":
         if len(sys.argv) < 4:
             print("Usage: scribe commit <file1> [file2...] -m <message>")
