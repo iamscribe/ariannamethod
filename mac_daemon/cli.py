@@ -242,10 +242,13 @@ def cmd_inject():
 
 def cmd_inject_auto():
     """Automatically inject Scribe identity into Cursor (AppleScript)"""
-    script_path = Path(__file__).parent / "inject_auto.sh"
+    # Find script path (handle symlinks correctly)
+    cli_path = Path(__file__).resolve() if '__file__' in globals() else Path(sys.argv[0]).resolve()
+    script_path = cli_path.parent / "inject_auto.sh"
     
     if not script_path.exists():
-        print("❌ inject_auto.sh not found")
+        print(f"❌ inject_auto.sh not found at: {script_path}")
+        print(f"   Looking in: {cli_path.parent}")
         return
     
     try:
