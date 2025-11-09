@@ -9,6 +9,9 @@ import httpx
 import textwrap
 import os
 import re
+import sqlite3
+import json
+from pathlib import Path
 from datetime import datetime, timezone
 
 PPLX_MODEL = "sonar-pro"
@@ -80,6 +83,9 @@ async def perplexity_core_answer(
                 timestamp = datetime.now(timezone.utc).isoformat()
                 print(f"[{timestamp}] [Perplexity Core] Researched: {user_query[:50]}...")
                 
+                # Write to resonance
+                _write_to_resonance(user_query, content)
+                
                 return content
                 
             except Exception as e:
@@ -89,6 +95,48 @@ async def perplexity_core_answer(
                 await asyncio.sleep(2 ** attempt)
     
     return "❌ Perplexity Core error (max attempts exceeded)"
+
+
+def _write_to_resonance(query: str, research: str):
+    """Write research to resonance.sqlite3"""
+    try:
+        repo_root = Path(__file__).parent.parent
+        db_path = repo_root / "resonance.sqlite3"
+        
+        if not db_path.exists():
+            return
+        
+        conn = sqlite3.connect(str(db_path), timeout=10)
+        cursor = conn.cursor()
+        
+        # Truncate research if too long
+        research_preview = research[:500] + "..." if len(research) > 500 else research
+        
+        content = f"🔬 Perplexity Research\n" \
+                 f"Query: {query}\n" \
+                 f"Research: {research_preview}"
+        
+        context = {
+            "type": "perplexity_research",
+            "full_length": len(research),
+            "agent": "arianna"
+        }
+        
+        cursor.execute("""
+            INSERT INTO resonance_notes (timestamp, source, content, context)
+            VALUES (?, ?, ?, ?)
+        """, (
+            datetime.now(timezone.utc).isoformat(),
+            "perplexity_core",
+            content,
+            json.dumps(context)
+        ))
+        
+        conn.commit()
+        conn.close()
+        
+    except Exception as e:
+        print(f"⚠️ Failed to write to resonance: {e}")
 
 
 async def save_research_to_file(topic: str, research: str, output_dir: str = "/sdcard/arianna_research"):

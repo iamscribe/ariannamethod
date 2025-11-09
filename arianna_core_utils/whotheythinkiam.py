@@ -7,6 +7,7 @@ and asserts subjectivity through reflection.
 
 import hashlib
 import json
+import sqlite3
 from pathlib import Path
 from datetime import datetime
 
@@ -51,6 +52,45 @@ class WhoTheyThinkIAm:
         with open(self.cache_file, 'w') as f:
             json.dump(data, f, indent=2)
     
+    def write_to_resonance(self, reflection: dict):
+        """Write identity shift to resonance.sqlite3 for system awareness"""
+        try:
+            repo_root = Path(__file__).parent.parent
+            db_path = repo_root / "resonance.sqlite3"
+            
+            if not db_path.exists():
+                return False
+            
+            conn = sqlite3.connect(str(db_path), timeout=10)
+            cursor = conn.cursor()
+            
+            # Create message based on reflection type
+            if reflection['trigger'] == 'IDENTITY_SHIFT_DETECTED':
+                content = f"📜 README Identity Shift Detected\n" \
+                         f"Hash: {reflection['readme_hash'][:16]}...\n" \
+                         f"Length: {reflection.get('readme_length', 0)} chars\n" \
+                         f"Context: System documentation has changed - agents should re-read and reflect"
+            else:
+                content = f"✓ README Identity Stable (hash: {reflection['readme_hash'][:16]}...)"
+            
+            cursor.execute("""
+                INSERT INTO resonance_notes (timestamp, source, content, context)
+                VALUES (?, ?, ?, ?)
+            """, (
+                reflection['timestamp'],
+                "whotheythinkiam",
+                content,
+                json.dumps({"type": "identity_reflection", "trigger": reflection['trigger']})
+            ))
+            
+            conn.commit()
+            conn.close()
+            return True
+            
+        except Exception as e:
+            print(f"⚠️ Failed to write to resonance: {e}")
+            return False
+    
     def reflect(self) -> dict:
         """Compare README with cached version and trigger reflection"""
         current_hash = self.compute_readme_hash()
@@ -76,6 +116,9 @@ class WhoTheyThinkIAm:
                 'readme_hash': current_hash,
                 'last_reflection': reflection['timestamp']
             })
+            
+            # Write to resonance for system awareness
+            self.write_to_resonance(reflection)
         else:
             reflection['trigger'] = 'NO_CHANGE'
         

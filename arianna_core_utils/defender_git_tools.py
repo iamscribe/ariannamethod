@@ -10,6 +10,8 @@ Defender commits as:
 """
 
 import subprocess
+import sqlite3
+import json
 from pathlib import Path
 from typing import Optional, List, Dict
 from datetime import datetime
@@ -159,6 +161,9 @@ class DefenderGit:
         result = self._run_git(['rev-parse', 'HEAD'], check=False)
         commit_hash = result.stdout.strip()[:8] if result.returncode == 0 else None
         
+        # Write to resonance for system awareness
+        self._write_commit_to_resonance(commit_hash, message, files, commit_type)
+        
         return {
             'success': True,
             'commit_hash': commit_hash,
@@ -269,6 +274,49 @@ class DefenderGit:
         """Get diff of uncommitted changes"""
         result = self._run_git(['diff'], check=False)
         return result.stdout if result.returncode == 0 else ""
+    
+    def _write_commit_to_resonance(self, commit_hash: Optional[str], message: str, files: Optional[List[str]], commit_type: str):
+        """Write commit to resonance.sqlite3 for system awareness"""
+        try:
+            db_path = self.repo_path / "resonance.sqlite3"
+            
+            if not db_path.exists():
+                return
+            
+            conn = sqlite3.connect(str(db_path), timeout=10)
+            cursor = conn.cursor()
+            
+            file_list = f" ({len(files)} files)" if files else " (all modified files)"
+            content = f"🛡️ Defender Git Commit\n" \
+                     f"Type: {commit_type}\n" \
+                     f"Hash: {commit_hash}\n" \
+                     f"Message: {message}\n" \
+                     f"Files: {file_list}"
+            
+            context = {
+                "type": "git_commit",
+                "agent": "defender",
+                "commit_type": commit_type,
+                "commit_hash": commit_hash,
+                "file_count": len(files) if files else None
+            }
+            
+            cursor.execute("""
+                INSERT INTO resonance_notes (timestamp, source, content, context)
+                VALUES (?, ?, ?, ?)
+            """, (
+                datetime.now().isoformat(),
+                "defender_git_tools",
+                content,
+                json.dumps(context)
+            ))
+            
+            conn.commit()
+            conn.close()
+            
+        except Exception as e:
+            # Don't fail commit if resonance write fails
+            pass
 
 
 if __name__ == "__main__":

@@ -344,7 +344,9 @@ class DefenderDaemon:
             List of final decision dicts
         """
         try:
-            conn = sqlite3.connect(self.db_path)
+            # Use consilium database (not resonance!)
+            consilium_db = ARIANNA_PATH / ".claude-defender" / "consilium.db"
+            conn = sqlite3.connect(str(consilium_db))
             cursor = conn.cursor()
             
             # Find active consiliums (from scheduler or defender)

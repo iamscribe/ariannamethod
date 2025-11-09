@@ -1,8 +1,10 @@
 import hashlib
 import os
 import json
+import sqlite3
 from pathlib import Path
 from typing import Dict, Set
+from datetime import datetime
 
 class RepoMonitor:
     """SHA256-based repository change detector for Arianna Method"""
@@ -80,7 +82,61 @@ class RepoMonitor:
         # Update cache
         self.save_cache(current)
         
+        # Write to resonance if changes detected
+        if any(changes.values()):
+            self.write_to_resonance(changes)
+        
         return changes
+    
+    def write_to_resonance(self, changes: Dict[str, Set[str]]):
+        """Write repository changes to resonance.sqlite3 for system awareness"""
+        try:
+            db_path = self.repo_path / "resonance.sqlite3"
+            
+            if not db_path.exists():
+                return
+            
+            conn = sqlite3.connect(str(db_path), timeout=10)
+            cursor = conn.cursor()
+            
+            # Create summary message
+            total_changes = sum(len(files) for files in changes.values())
+            summary_parts = []
+            if changes['added']:
+                summary_parts.append(f"{len(changes['added'])} added")
+            if changes['modified']:
+                summary_parts.append(f"{len(changes['modified'])} modified")
+            if changes['deleted']:
+                summary_parts.append(f"{len(changes['deleted'])} deleted")
+            
+            summary = f"📁 Repository Changes: {', '.join(summary_parts)}\n"
+            
+            # Add file list (limit to first 10 of each type)
+            for change_type, files in changes.items():
+                if files:
+                    file_list = list(files)[:10]
+                    summary += f"\n{change_type.upper()}:\n"
+                    for f in file_list:
+                        summary += f"  - {f}\n"
+                    if len(files) > 10:
+                        summary += f"  ... and {len(files) - 10} more\n"
+            
+            cursor.execute("""
+                INSERT INTO resonance_notes (timestamp, source, content, context)
+                VALUES (?, ?, ?, ?)
+            """, (
+                datetime.now().isoformat(),
+                "repo_monitor",
+                summary,
+                json.dumps({"type": "repository_changes", "total": total_changes})
+            ))
+            
+            conn.commit()
+            conn.close()
+            
+        except Exception as e:
+            # Don't fail if resonance write fails
+            pass
 
 if __name__ == "__main__":
     monitor = RepoMonitor()

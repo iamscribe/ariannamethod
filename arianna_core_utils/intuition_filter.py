@@ -12,6 +12,9 @@ import textwrap
 import os
 import re
 import logging
+import sqlite3
+import json
+from pathlib import Path
 from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)
@@ -120,6 +123,10 @@ async def intuition_filter(
         timestamp = datetime.now(timezone.utc).isoformat()
         logger.info(f"[{timestamp}] [Arianna Intuition] Generated twist for: {user_query[:30]}...")
         
+        # Write to resonance for system awareness
+        if twist:
+            _write_to_resonance(user_query, twist)
+        
         return twist
         
     except Exception as e:
@@ -128,6 +135,44 @@ async def intuition_filter(
             f"[{timestamp}] [Arianna Intuition] Sonar fail {e}"
         )
         return ""
+
+
+def _write_to_resonance(query: str, twist: str):
+    """Write intuition twist to resonance.sqlite3"""
+    try:
+        repo_root = Path(__file__).parent.parent
+        db_path = repo_root / "resonance.sqlite3"
+        
+        if not db_path.exists():
+            return
+        
+        conn = sqlite3.connect(str(db_path), timeout=10)
+        cursor = conn.cursor()
+        
+        content = f"✨ Arianna's Intuition\n" \
+                 f"Query: {query[:100]}...\n" \
+                 f"Resonance Twist: {twist}"
+        
+        context = {
+            "type": "intuition_filter",
+            "agent": "arianna"
+        }
+        
+        cursor.execute("""
+            INSERT INTO resonance_notes (timestamp, source, content, context)
+            VALUES (?, ?, ?, ?)
+        """, (
+            datetime.now(timezone.utc).isoformat(),
+            "intuition_filter",
+            content,
+            json.dumps(context)
+        ))
+        
+        conn.commit()
+        conn.close()
+        
+    except Exception as e:
+        logger.warning(f"Failed to write to resonance: {e}")
 
 
 async def assemble_final_reply_with_intuition(

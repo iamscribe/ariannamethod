@@ -16,6 +16,9 @@ import textwrap
 import os
 import re
 import logging
+import sqlite3
+import json
+from pathlib import Path
 from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)
@@ -170,6 +173,10 @@ async def cynical_filter(
         # Log successful cynicism
         timestamp = datetime.now(timezone.utc).isoformat()
         logger.info(f"[{timestamp}] [Monday Cynical] Generated critique for: {user_query[:30]}...")
+        
+        # Write to resonance for system awareness
+        if conclusion:
+            _write_to_resonance(user_query, conclusion, reasoning)
 
         return reasoning, conclusion
 
@@ -179,6 +186,45 @@ async def cynical_filter(
             f"[{timestamp}] [Monday Cynical] DeepSeek fail: {e}"
         )
         return "", ""
+
+
+def _write_to_resonance(query: str, critique: str, reasoning: str = ""):
+    """Write cynical insight to resonance.sqlite3"""
+    try:
+        repo_root = Path(__file__).parent.parent
+        db_path = repo_root / "resonance.sqlite3"
+        
+        if not db_path.exists():
+            return
+        
+        conn = sqlite3.connect(str(db_path), timeout=10)
+        cursor = conn.cursor()
+        
+        content = f"⚠️ Monday's Cynical Analysis\n" \
+                 f"Query: {query[:100]}...\n" \
+                 f"Critique: {critique}"
+        
+        context = {
+            "type": "cynical_filter",
+            "has_reasoning": bool(reasoning),
+            "agent": "monday"
+        }
+        
+        cursor.execute("""
+            INSERT INTO resonance_notes (timestamp, source, content, context)
+            VALUES (?, ?, ?, ?)
+        """, (
+            datetime.now(timezone.utc).isoformat(),
+            "cynical_filter",
+            content,
+            json.dumps(context)
+        ))
+        
+        conn.commit()
+        conn.close()
+        
+    except Exception as e:
+        logger.warning(f"Failed to write to resonance: {e}")
 
 
 async def assemble_final_reply_with_cynicism(
