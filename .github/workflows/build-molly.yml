@@ -1,0 +1,46 @@
+name: Build Molly Widget
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'apk/MollyWidget/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        
+    - name: Setup Gradle
+      uses: gradle/gradle-build-action@v2
+      
+    - name: Grant execute permission for gradlew
+      working-directory: apk/MollyWidget
+      run: chmod +x gradlew
+      
+    - name: Build Release APK
+      working-directory: apk/MollyWidget
+      run: ./gradlew assembleRelease
+      
+    - name: Rename APK
+      run: |
+        cd apk/MollyWidget/app/build/outputs/apk/release
+        mv app-release-unsigned.apk MollyWidget.apk
+        
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: MollyWidget
+        path: apk/MollyWidget/app/build/outputs/apk/release/MollyWidget.apk
+        retention-days: 30
+
