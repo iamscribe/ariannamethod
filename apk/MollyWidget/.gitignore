@@ -10,6 +10,7 @@
 .cxx
 *.apk
 !molly.apk
+!molly_v1.apk
 *.ap_
 *.dex
 *.class
