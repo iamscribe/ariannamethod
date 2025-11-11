@@ -4,7 +4,9 @@ import android.app.Activity
 import android.appwidget.AppWidgetManager
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.Gravity
+import android.view.KeyEvent
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
@@ -31,73 +33,58 @@ class MollyConfigActivity : Activity() {
         // Setup minimal UI
         val layout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(32, 32, 32, 32)
+            setPadding(16, 16, 16, 16)
             setBackgroundColor(0xFFFFFFFF.toInt())
         }
         
-        // Title
-        val title = TextView(this).apply {
-            text = "Say something to Molly..."
-            textSize = 16f
-            setTextColor(0xFF000000.toInt())
-            gravity = Gravity.CENTER
-            setPadding(0, 0, 0, 24)
-        }
-        layout.addView(title)
-        
         // Input field
         val input = EditText(this).apply {
-            hint = "say something..."
+            hint = ""
             textSize = 14f
             setTextColor(0xFF000000.toInt())
             setHintTextColor(0xFF888888.toInt())
-            maxLines = 3
+            isSingleLine = true
             imeOptions = EditorInfo.IME_ACTION_SEND
+            maxEms = 100
             
             val params = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
             )
             layoutParams = params
-        }
-        
-        input.setOnEditorActionListener { v, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_SEND) {
-                val userText = v.text.toString().take(100) // Limit to 100 chars
-                if (userText.isNotBlank()) {
-                    submitInput(userText)
+            
+            setOnEditorActionListener { v, actionId, _ ->
+                Log.d("MollyConfig", "onEditorAction: actionId=$actionId")
+                if (actionId == EditorInfo.IME_ACTION_SEND) {
+                    val userText = v.text.toString().trim().take(100)
+                    Log.d("MollyConfig", "Submitting: $userText")
+                    if (userText.isNotBlank()) {
+                        submitInput(userText)
+                    }
+                    return@setOnEditorActionListener true
                 }
-                true
-            } else {
                 false
             }
         }
         
         layout.addView(input)
         
-        // Instruction text
-        val instruction = TextView(this).apply {
-            text = "Press Enter to send (max 100 chars)"
-            textSize = 12f
-            setTextColor(0xFF666666.toInt())
-            gravity = Gravity.CENTER
-            setPadding(0, 16, 0, 0)
-        }
-        layout.addView(instruction)
-        
         setContentView(layout)
         
-        // Focus input
+        // Focus input and show keyboard
         input.requestFocus()
+        window.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE)
     }
     
     private fun submitInput(text: String) {
+        Log.d("MollyConfig", "submitInput called with: $text")
         // Send broadcast to widget with user input
         val intent = Intent(this, MollyWidget::class.java).apply {
             action = "com.ariannamethod.molly.ACTION_SUBMIT"
             putExtra("user_input", text)
         }
         sendBroadcast(intent)
+        Log.d("MollyConfig", "Broadcast sent")
         
         // Set result and finish
         val resultValue = Intent().apply {

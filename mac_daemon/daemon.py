@@ -251,7 +251,7 @@ class MacDaemon:
         """Sync memory from Termux"""
         try:
             # Try ADB pull
-            remote_db = "/sdcard/scribe_sync/resonance.sqlite3"
+            remote_db = "/sdcard/ariannamethod/resonance.sqlite3"
             local_db = ARIANNA_PATH / "resonance.sqlite3"
             
             result = subprocess.run(

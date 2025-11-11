@@ -73,7 +73,7 @@ case "$1" in
     echo "   cat scribe_logs/conversation_*.json | jq '.messages[-1]' # last message"
     echo ""
     echo "📊 Also check resonance database:"
-    echo "   adb pull /sdcard/resonance.sqlite3 ."
+    echo "   adb pull /sdcard/ariannamethod/resonance.sqlite3 ."
     echo "   sqlite3 resonance.sqlite3 \"SELECT * FROM resonance_notes WHERE context='scribe_conversation' LIMIT 5\""
     ;;
 esac

@@ -7,6 +7,7 @@ import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
 import android.os.SystemClock
+import android.util.Log
 import android.widget.RemoteViews
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -43,10 +44,12 @@ class MollyWidget : AppWidgetProvider() {
     
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
+        Log.d("MollyWidget", "onReceive: action=${intent.action}")
         
         when (intent.action) {
             ACTION_UPDATE -> {
                 // Automatic update (every 3 minutes)
+                Log.d("MollyWidget", "ACTION_UPDATE received")
                 val appWidgetManager = AppWidgetManager.getInstance(context)
                 val appWidgetIds = appWidgetManager.getAppWidgetIds(
                     android.content.ComponentName(context, MollyWidget::class.java)
@@ -60,6 +63,7 @@ class MollyWidget : AppWidgetProvider() {
             ACTION_SUBMIT -> {
                 // User submitted text
                 val userInput = intent.getStringExtra(EXTRA_USER_INPUT)
+                Log.d("MollyWidget", "ACTION_SUBMIT received: $userInput")
                 val appWidgetManager = AppWidgetManager.getInstance(context)
                 val appWidgetIds = appWidgetManager.getAppWidgetIds(
                     android.content.ComponentName(context, MollyWidget::class.java)
@@ -94,23 +98,15 @@ class MollyWidget : AppWidgetProvider() {
         CoroutineScope(Dispatchers.IO).launch {
             val engine = MollyEngine(context)
             
-            // Get text to display
             val displayText = if (userInput != null && userInput.isNotBlank()) {
-                // User provided input - weave it into monologue
                 engine.weavePhrase(userInput)
             } else {
-                // Check for resonance integration first
                 engine.integrateResonance() ?: engine.getNextChunk()
             }
             
-            // Update UI on main thread
             CoroutineScope(Dispatchers.Main).launch {
                 val views = RemoteViews(context.packageName, R.layout.molly_widget)
                 views.setTextViewText(R.id.molly_display, displayText)
-                
-                // Note: EditText in widget requires special handling
-                // For simplicity, using a configuration activity approach
-                // User can click widget to open input dialog
                 
                 val clickIntent = Intent(context, MollyConfigActivity::class.java).apply {
                     putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
@@ -121,7 +117,6 @@ class MollyWidget : AppWidgetProvider() {
                     clickIntent,
                     PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
                 )
-                
                 views.setOnClickPendingIntent(R.id.molly_display, clickPendingIntent)
                 
                 appWidgetManager.updateAppWidget(appWidgetId, views)

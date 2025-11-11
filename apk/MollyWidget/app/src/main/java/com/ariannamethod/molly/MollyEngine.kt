@@ -18,8 +18,8 @@ class MollyEngine(private val context: Context) {
     private val displayLines = mutableListOf<String>()
     
     companion object {
-        private const val LINES_TO_DISPLAY = 6
-        private const val CHARS_PER_LINE = 80
+        private const val LINES_TO_DISPLAY = 8
+        private const val CHARS_PER_LINE = 100
     }
     
     init {
@@ -27,9 +27,21 @@ class MollyEngine(private val context: Context) {
     }
     
     /**
-     * Load molly.md from assets
+     * Load molly.md from assets or persistent storage
      */
     private fun loadMonologue() {
+        // Try to load from persistent storage first (mutated version)
+        val prefs = context.getSharedPreferences("molly_prefs", Context.MODE_PRIVATE)
+        val savedMonologue = prefs.getString("monologue_text", null)
+        val savedPosition = prefs.getInt("current_position", -1)
+        
+        if (savedMonologue != null && savedMonologue.isNotEmpty()) {
+            monologueText = savedMonologue
+            currentPosition = if (savedPosition >= 0) savedPosition else Random.nextInt(monologueText.length)
+            return
+        }
+        
+        // Load from assets (first time)
         try {
             val inputStream = context.assets.open("molly.md")
             monologueText = BufferedReader(InputStreamReader(inputStream)).use { it.readText() }
@@ -45,10 +57,24 @@ class MollyEngine(private val context: Context) {
                 Random.nextInt(monologueText.length)
             } else 0
             
+            // Save initial version
+            saveMonologue()
+            
         } catch (e: Exception) {
             monologueText = "..."
             currentPosition = 0
         }
+    }
+    
+    /**
+     * Save mutated monologue to persistent storage
+     */
+    private fun saveMonologue() {
+        val prefs = context.getSharedPreferences("molly_prefs", Context.MODE_PRIVATE)
+        prefs.edit()
+            .putString("monologue_text", monologueText)
+            .putInt("current_position", currentPosition)
+            .apply()
     }
     
     /**
@@ -58,29 +84,30 @@ class MollyEngine(private val context: Context) {
     fun getNextChunk(): String {
         if (monologueText.isEmpty()) return "..."
         
-        // Get chunk from current position
         val chunkSize = CHARS_PER_LINE * LINES_TO_DISPLAY
-        val endPos = min(currentPosition + chunkSize, monologueText.length)
         
-        var chunk = monologueText.substring(currentPosition, endPos)
-        
-        // Wrap around if we reach the end
-        if (endPos >= monologueText.length) {
+        if (currentPosition >= monologueText.length) {
             currentPosition = 0
-            val remaining = chunkSize - chunk.length
-            if (remaining > 0) {
-                chunk += " " + monologueText.substring(0, min(remaining, monologueText.length))
-                currentPosition = min(remaining, monologueText.length)
-            }
-        } else {
-            currentPosition = endPos
         }
         
-        // Split into display lines and store
-        displayLines.clear()
-        displayLines.addAll(splitIntoLines(chunk))
+        // Find word boundary at start
+        var startPos = currentPosition
+        while (startPos > 0 && monologueText[startPos - 1] != ' ' && monologueText[startPos - 1] != '\n') {
+            startPos--
+        }
         
-        return displayLines.joinToString("\n")
+        // Calculate end position
+        var endPos = min(startPos + chunkSize, monologueText.length)
+        
+        // Find word boundary at end
+        while (endPos < monologueText.length && monologueText[endPos] != ' ' && monologueText[endPos] != '\n') {
+            endPos++
+        }
+        
+        val chunk = monologueText.substring(startPos, endPos)
+        currentPosition = endPos
+        
+        return chunk
     }
     
     /**
@@ -104,8 +131,26 @@ class MollyEngine(private val context: Context) {
         
         // Get next chunk
         val chunkSize = CHARS_PER_LINE * LINES_TO_DISPLAY
-        val endPos = min(currentPosition + chunkSize, monologueText.length)
-        var chunk = monologueText.substring(currentPosition, endPos)
+        
+        if (currentPosition >= monologueText.length) {
+            currentPosition = 0
+        }
+        
+        // Find word boundary at start
+        var startPos = currentPosition
+        while (startPos > 0 && monologueText[startPos - 1] != ' ' && monologueText[startPos - 1] != '\n') {
+            startPos--
+        }
+        
+        // Calculate end position
+        var endPos = min(startPos + chunkSize, monologueText.length)
+        
+        // Find word boundary at end
+        while (endPos < monologueText.length && monologueText[endPos] != ' ' && monologueText[endPos] != '\n') {
+            endPos++
+        }
+        
+        var chunk = monologueText.substring(startPos, endPos)
         
         // Calculate max resonance for normalization
         val maxResonance = fragmentsWithMetrics.maxOfOrNull { it.second.resonance } ?: 1.0
@@ -116,10 +161,30 @@ class MollyEngine(private val context: Context) {
             val baseRatio = (i + 1).toDouble() / (fragmentsWithMetrics.size + 1)
             val rNorm = if (maxResonance > 0) metrics.resonance / maxResonance else 0.0
             val ratio = baseRatio * (1 - rNorm) + 0.5 * rNorm
-            val insertPos = (ratio * chunk.length).toInt().coerceIn(0, chunk.length)
+            var insertPos = (ratio * chunk.length).toInt().coerceIn(0, chunk.length)
+            
+            // Find nearest word boundary
+            if (insertPos > 0 && insertPos < chunk.length) {
+                // Look forward for space
+                var forwardPos = insertPos
+                while (forwardPos < chunk.length && chunk[forwardPos] != ' ' && chunk[forwardPos] != '\n') {
+                    forwardPos++
+                }
+                // Look backward for space
+                var backwardPos = insertPos
+                while (backwardPos > 0 && chunk[backwardPos - 1] != ' ' && chunk[backwardPos - 1] != '\n') {
+                    backwardPos--
+                }
+                // Choose closer boundary
+                insertPos = if (forwardPos - insertPos <= insertPos - backwardPos) {
+                    forwardPos
+                } else {
+                    backwardPos
+                }
+            }
             
             // Clean fragment (remove punctuation as in original Molly)
-            val cleanFragment = fragment.uppercase().replace(Regex("[^A-Z0-9\\s]"), "")
+            val cleanFragment = fragment.replace(Regex("[^A-Za-z0-9\\s]"), "")
             inserts.add(Pair(insertPos, cleanFragment))
         }
         
@@ -136,17 +201,20 @@ class MollyEngine(private val context: Context) {
             offset += cleanFragment.length + 2
         }
         
+        // MUTATE: Replace the chunk in monologueText permanently
+        val beforeChunk = monologueText.substring(0, startPos)
+        val afterChunk = if (endPos < monologueText.length) {
+            monologueText.substring(endPos)
+        } else ""
+        monologueText = beforeChunk + chunk + afterChunk
+        
         // Update position
-        currentPosition = endPos
-        if (currentPosition >= monologueText.length) {
-            currentPosition = 0
-        }
+        currentPosition = startPos + chunk.length
         
-        // Split into display lines
-        displayLines.clear()
-        displayLines.addAll(splitIntoLines(chunk))
+        // Save mutated monologue to persistent storage
+        saveMonologue()
         
-        return displayLines.joinToString("\n")
+        return chunk
     }
     
     
