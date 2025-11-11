@@ -9,6 +9,7 @@
 .externalNativeBuild
 .cxx
 *.apk
+!molly.apk
 *.ap_
 *.dex
 *.class
