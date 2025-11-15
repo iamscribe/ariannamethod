@@ -140,10 +140,9 @@ class MacDaemon:
         with open(LOG_FILE, 'a') as f:
             f.write(log_line + "\n")
         
-        # Log to Termux resonance bus
+        # Log to Termux resonance bus (HTTP only; skip silently if unavailable)
         if also_resonance:
-            if not self._log_resonance_http(message):
-                self._log_resonance_ssh(timestamp, message)
+            self._log_resonance_http(message)
     
     def _ensure_resonance_forward(self):
         """Ensure ADB port forwarding for resonance HTTP API"""
@@ -186,35 +185,8 @@ class MacDaemon:
             return False
     
     def _log_resonance_ssh(self, timestamp: str, message: str):
-        """Fallback to direct SSH logging when HTTP API unavailable"""
-        try:
-            if not self.config.get('ssh_password'):
-                return
-            
-            ssh = paramiko.SSHClient()
-            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            ssh.connect(
-                self.config['ssh_host'],
-                port=self.config['ssh_port'],
-                username=self.config['ssh_user'],
-                password=self.config['ssh_password'],
-                timeout=5
-            )
-            
-            content_escaped = message.replace("'", "''")
-            sql_cmd = (
-                "sqlite3 ~/ariannamethod/resonance.sqlite3 "
-                "\"INSERT INTO resonance_notes "
-                "(timestamp, source, content, context) "
-                f"VALUES ('{timestamp}', 'mac_daemon', '{content_escaped}', 'mac_daemon_log');\""
-            )
-            
-            ssh.exec_command(sql_cmd, timeout=5)
-            ssh.close()
-        except Exception as e:
-            warn_line = f"[{datetime.now().isoformat()}] [WARN] Resonance SSH log failed: {e}"
-            with open(LOG_FILE, 'a') as f:
-                f.write(warn_line + "\n")
+        """Deprecated SSH logging (no-op)"""
+        return
 
     def check_phone(self):
         """Check if phone connected via ADB"""
