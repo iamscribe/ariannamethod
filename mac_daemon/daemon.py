@@ -307,7 +307,14 @@ class MacDaemon:
             return None
     
     def sync_memory(self):
-        """Sync memory from Termux"""
+        """Sync memory from Termux or skip when HTTP API in use"""
+        # If HTTP resonance is available, no need to pull the giant DB locally
+        if self.config.get('resonance_api_url'):
+            self.state['last_sync'] = datetime.now().isoformat()
+            self._save_state()
+            self.log("Memory sync skipped (using HTTP resonance API)")
+            return True
+        
         try:
             # Try ADB pull
             remote_db = "/sdcard/ariannamethod/resonance.sqlite3"
@@ -900,10 +907,9 @@ And then WAIT for his instructions.
                     self.check_cursor()
                     last_cursor_check = now
                 
-                # Periodic sync
-                if now - last_sync >= SYNC_INTERVAL and self.state['phone_connected']:
+                # Periodic sync (works even if phone temporarily offline)
+                if now - last_sync >= SYNC_INTERVAL:
                     self.sync_memory()
-                    # Also sync Termux logs
                     self.sync_termux_logs()
                     last_sync = now
                 
