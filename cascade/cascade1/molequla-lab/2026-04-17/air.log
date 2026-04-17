@@ -1,0 +1,225 @@
+[ecology] Element: air → corpus: nonames_air.txt
+[evolution] Autonomous evolution mode — organism will grow through all stages without pause.
+[ecology] Joined swarm. 1 peer(s) detected.
+molequla is alive. [evolution] Autonomous mode — background trainer running. Ctrl+C to stop.
+[dna] air wrote 40 bytes to ecology
+[dna] air consumed 35807 bytes from 474 files: [earth/gen_1776406085_1.txt earth/gen_1776406087_2.txt earth/gen_1776406090_3.txt earth/gen_1776406093_4.txt earth/gen_1776406100_7.txt earth/gen_1776406103_8.txt earth/gen_1776406106_9.txt earth/gen_1776406108_10.txt earth/gen_1776406116_13.txt earth/gen_1776406118_14.txt earth/gen_1776406121_15.txt earth/gen_1776406123_16.txt earth/gen_1776406131_19.txt earth/gen_1776406134_20.txt earth/gen_1776406136_21.txt earth/gen_1776406139_22.txt earth/gen_1776406147_25.txt earth/gen_1776406149_26.txt earth/gen_1776406152_27.txt earth/gen_1776406154_28.txt earth/gen_1776406157_29.txt earth/gen_1776406162_31.txt earth/gen_1776406165_32.txt earth/gen_1776406167_33.txt earth/gen_1776406170_34.txt earth/gen_1776406178_37.txt earth/gen_1776406180_38.txt earth/gen_1776406183_39.txt earth/gen_1776406185_40.txt earth/gen_1776406193_43.txt earth/gen_1776406195_44.txt earth/gen_1776406198_45.txt earth/gen_1776406201_46.txt earth/gen_1776406206_48.txt earth/gen_1776406209_49.txt earth/gen_1776406211_50.txt earth/gen_1776406214_51.txt earth/gen_1776406216_52.txt earth/gen_1776406224_55.txt earth/gen_1776406227_56.txt earth/gen_1776406229_57.txt earth/gen_1776406232_58.txt earth/gen_1776406240_61.txt earth/gen_1776406243_62.txt earth/gen_1776406245_63.txt earth/gen_1776406248_64.txt earth/gen_1776406253_66.txt earth/gen_1776406255_67.txt earth/gen_1776406258_68.txt earth/gen_1776406261_69.txt earth/gen_1776406263_70.txt earth/gen_1776406269_72.txt earth/gen_1776406271_73.txt earth/gen_1776406274_74.txt earth/gen_1776406276_75.txt earth/gen_1776406279_76.txt earth/gen_1776406286_79.txt earth/gen_1776406289_80.txt earth/gen_1776406292_81.txt earth/gen_1776406294_82.txt earth/gen_1776406299_84.txt earth/gen_1776406302_85.txt earth/gen_1776406305_86.txt earth/gen_1776406307_87.txt earth/gen_1776406310_88.txt earth/gen_1776406317_91.txt earth/gen_1776406320_92.txt earth/gen_1776406323_93.txt earth/gen_1776406325_94.txt earth/gen_1776406333_97.txt earth/gen_1776406336_98.txt earth/gen_1776406338_99.txt earth/gen_1776406341_100.txt earth/gen_1776406349_103.txt earth/gen_1776406351_104.txt earth/gen_1776406354_105.txt earth/gen_1776406356_106.txt earth/gen_1776406364_109.txt earth/gen_1776406367_110.txt earth/gen_1776406369_111.txt earth/gen_1776406372_112.txt earth/gen_1776406379_115.txt earth/gen_1776406382_116.txt earth/gen_1776406385_117.txt earth/gen_1776406387_118.txt earth/gen_1776406393_120.txt earth/gen_1776406395_121.txt earth/gen_1776406398_122.txt earth/gen_1776406400_123.txt earth/gen_1776406403_124.txt earth/gen_1776406411_127.txt earth/gen_1776406413_128.txt earth/gen_1776406416_129.txt earth/gen_1776406418_130.txt earth/gen_1776406421_131.txt earth/gen_1776406426_133.txt earth/gen_1776406429_134.txt earth/gen_1776406431_135.txt earth/gen_1776406434_136.txt earth/gen_1776406442_139.txt earth/gen_1776406444_140.txt earth/gen_1776406447_141.txt earth/gen_1776406449_142.txt earth/gen_1776406457_145.txt earth/gen_1776406460_146.txt earth/gen_1776406462_147.txt earth/gen_1776406465_148.txt earth/gen_1776406470_150.txt earth/gen_1776406472_151.txt earth/gen_1776406475_152.txt earth/gen_1776406478_153.txt earth/gen_1776406480_154.txt earth/gen_1776406488_157.txt earth/gen_1776406490_158.txt earth/gen_1776406493_159.txt earth/gen_1776406495_160.txt earth/gen_1776406503_163.txt earth/gen_1776406506_164.txt earth/gen_1776406511_166.txt earth/gen_1776406519_169.txt earth/gen_1776406521_170.txt earth/gen_1776406524_171.txt earth/gen_1776406527_172.txt earth/gen_1776406534_175.txt earth/gen_1776406537_176.txt earth/gen_1776406539_177.txt earth/gen_1776406542_178.txt earth/gen_1776406550_181.txt earth/gen_1776406552_182.txt earth/gen_1776406555_183.txt earth/gen_1776406557_184.txt earth/gen_1776406565_187.txt earth/gen_1776406568_188.txt earth/gen_1776406570_189.txt earth/gen_1776406573_190.txt earth/gen_1776406581_193.txt earth/gen_1776406583_194.txt earth/gen_1776406588_196.txt earth/gen_1776406593_198.txt earth/gen_1776406596_199.txt earth/gen_1776406599_200.txt earth/gen_1776406601_201.txt earth/gen_1776406604_202.txt earth/gen_1776406612_205.txt earth/gen_1776406614_206.txt earth/gen_1776406617_207.txt earth/gen_1776406619_208.txt earth/gen_1776406627_211.txt earth/gen_1776406630_212.txt earth/gen_1776406632_213.txt earth/gen_1776406635_214.txt earth/gen_1776406640_216.txt earth/gen_1776406643_217.txt earth/gen_1776406645_218.txt earth/gen_1776406648_219.txt earth/gen_1776406651_220.txt earth/gen_1776406658_223.txt earth/gen_1776406661_224.txt earth/gen_1776406663_225.txt earth/gen_1776406666_226.txt earth/gen_1776406674_229.txt earth/gen_1776406676_230.txt earth/gen_1776406679_231.txt earth/gen_1776406681_232.txt earth/gen_1776406686_234.txt earth/gen_1776406689_235.txt earth/gen_1776406692_236.txt earth/gen_1776406697_238.txt earth/gen_1776406702_240.txt earth/gen_1776406704_241.txt earth/gen_1776406707_242.txt earth/gen_1776406710_243.txt earth/gen_1776406712_244.txt earth/gen_1776406720_247.txt earth/gen_1776406723_248.txt earth/gen_1776406725_249.txt earth/gen_1776406728_250.txt earth/gen_1776406735_253.txt earth/gen_1776406738_254.txt earth/gen_1776406741_255.txt earth/gen_1776406743_256.txt earth/gen_1776406751_259.txt earth/gen_1776406754_260.txt earth/gen_1776406756_261.txt earth/gen_1776406759_262.txt earth/gen_1776406764_264.txt earth/gen_1776406767_265.txt earth/gen_1776406769_266.txt earth/gen_1776406772_267.txt earth/gen_1776406774_268.txt earth/gen_1776406782_271.txt earth/gen_1776406785_272.txt earth/gen_1776406787_273.txt earth/gen_1776406790_274.txt earth/gen_1776406797_277.txt earth/gen_1776406800_278.txt earth/gen_1776406803_279.txt earth/gen_1776406805_280.txt earth/gen_1776406811_282.txt earth/gen_1776406813_283.txt earth/gen_1776406816_284.txt earth/gen_1776406818_285.txt earth/gen_1776406821_286.txt earth/gen_1776406829_289.txt earth/gen_1776406831_290.txt earth/gen_1776406834_291.txt earth/gen_1776406837_292.txt earth/gen_1776406844_295.txt earth/gen_1776406847_296.txt earth/gen_1776406850_297.txt earth/gen_1776406852_298.txt earth/gen_1776406857_300.txt earth/gen_1776406860_301.txt earth/gen_1776406862_302.txt earth/gen_1776406865_303.txt earth/gen_1776406868_304.txt earth/gen_1776406875_307.txt earth/gen_1776406878_308.txt earth/gen_1776406881_309.txt earth/gen_1776406883_310.txt earth/gen_1776406891_313.txt earth/gen_1776406893_314.txt earth/gen_1776406896_315.txt earth/gen_1776406899_316.txt earth/gen_1776406906_319.txt earth/gen_1776406909_320.txt earth/gen_1776406911_321.txt earth/gen_1776406914_322.txt earth/gen_1776406922_325.txt earth/gen_1776406924_326.txt earth/gen_1776406927_327.txt earth/gen_1776406929_328.txt earth/gen_1776406937_331.txt earth/gen_1776406940_332.txt earth/gen_1776406942_333.txt earth/gen_1776406945_334.txt earth/gen_1776406953_337.txt earth/gen_1776406955_338.txt earth/gen_1776406958_339.txt earth/gen_1776406960_340.txt earth/gen_1776406968_343.txt earth/gen_1776406971_344.txt earth/gen_1776406973_345.txt earth/gen_1776406976_346.txt earth/gen_1776406984_349.txt earth/gen_1776406986_350.txt earth/gen_1776406991_352.txt earth/gen_1776406999_355.txt earth/gen_1776407002_356.txt earth/gen_1776407004_357.txt earth/gen_1776407007_358.txt earth/gen_1776407015_361.txt earth/gen_1776407017_362.txt earth/gen_1776407022_364.txt earth/gen_1776407027_366.txt earth/gen_1776407030_367.txt earth/gen_1776407033_368.txt earth/gen_1776407035_369.txt earth/gen_1776407038_370.txt earth/gen_1776407046_373.txt earth/gen_1776407048_374.txt earth/gen_1776407051_375.txt earth/gen_1776407053_376.txt earth/gen_1776407058_378.txt earth/gen_1776407061_379.txt earth/gen_1776407064_380.txt earth/gen_1776407069_382.txt earth/gen_1776407074_384.txt earth/gen_1776407076_385.txt earth/gen_1776407079_386.txt earth/gen_1776407081_387.txt earth/gen_1776407084_388.txt earth/gen_1776407092_391.txt earth/gen_1776407094_392.txt earth/gen_1776407097_393.txt earth/gen_1776407099_394.txt earth/gen_1776407107_397.txt earth/gen_1776407110_398.txt earth/gen_1776407112_399.txt earth/gen_1776407115_400.txt earth/gen_1776407123_403.txt earth/gen_1776407125_404.txt earth/gen_1776407128_405.txt earth/gen_1776407131_406.txt earth/gen_1776407138_409.txt earth/gen_1776407141_410.txt earth/gen_1776407144_411.txt earth/gen_1776407146_412.txt earth/gen_1776407154_415.txt earth/gen_1776407157_416.txt earth/gen_1776407162_418.txt earth/gen_1776407167_420.txt earth/gen_1776407170_421.txt earth/gen_1776407172_422.txt earth/gen_1776407175_423.txt earth/gen_1776407177_424.txt earth/gen_1776407185_427.txt earth/gen_1776407188_428.txt earth/gen_1776407190_429.txt earth/gen_1776407193_430.txt earth/gen_1776407201_433.txt earth/gen_1776407203_434.txt earth/gen_1776407206_435.txt earth/gen_1776407208_436.txt earth/gen_1776407216_439.txt earth/gen_1776407219_440.txt earth/gen_1776407221_441.txt earth/gen_1776407224_442.txt earth/gen_1776407232_445.txt earth/gen_1776407234_446.txt earth/gen_1776407237_447.txt earth/gen_1776407239_448.txt earth/gen_1776407247_451.txt earth/gen_1776407250_452.txt earth/gen_1776407252_453.txt earth/gen_1776407255_454.txt earth/gen_1776407260_456.txt earth/gen_1776407263_457.txt earth/gen_1776407265_458.txt earth/gen_1776407268_459.txt earth/gen_1776407270_460.txt earth/gen_1776407278_463.txt earth/gen_1776407281_464.txt earth/gen_1776407283_465.txt earth/gen_1776407286_466.txt earth/gen_1776407294_469.txt earth/gen_1776407296_470.txt earth/gen_1776407299_471.txt earth/gen_1776407301_472.txt earth/gen_1776407309_475.txt earth/gen_1776407312_476.txt earth/gen_1776407314_477.txt earth/gen_1776407317_478.txt earth/gen_1776407325_481.txt earth/gen_1776407327_482.txt earth/gen_1776407330_483.txt earth/gen_1776407333_484.txt earth/gen_1776407340_487.txt earth/gen_1776407343_488.txt earth/gen_1776407346_489.txt earth/gen_1776407348_490.txt earth/gen_1776407356_493.txt earth/gen_1776407358_494.txt earth/gen_1776407361_495.txt earth/gen_1776407364_496.txt earth/gen_1776407371_499.txt earth/gen_1776407374_500.txt earth/gen_1776407376_501.txt earth/gen_1776407379_502.txt earth/gen_1776407387_505.txt earth/gen_1776407390_506.txt earth/gen_1776407392_507.txt earth/gen_1776407395_508.txt earth/gen_1776407402_511.txt earth/gen_1776407405_512.txt earth/gen_1776407408_513.txt earth/gen_1776407410_514.txt earth/gen_1776407415_516.txt earth/gen_1776407418_517.txt earth/gen_1776407421_518.txt earth/gen_1776407423_519.txt earth/gen_1776407426_520.txt earth/gen_1776407433_523.txt earth/gen_1776407436_524.txt earth/gen_1776407439_525.txt earth/gen_1776407441_526.txt earth/gen_1776407449_529.txt earth/gen_1776407452_530.txt earth/gen_1776407454_531.txt earth/gen_1776407457_532.txt earth/gen_1776407462_534.txt earth/gen_1776407464_535.txt earth/gen_1776407467_536.txt earth/gen_1776407472_538.txt earth/gen_1776407480_541.txt earth/gen_1776407482_542.txt earth/gen_1776407485_543.txt earth/gen_1776407488_544.txt earth/gen_1776407493_546.txt earth/gen_1776407495_547.txt earth/gen_1776407498_548.txt earth/gen_1776407500_549.txt earth/gen_1776407503_550.txt earth/gen_1776407511_553.txt earth/gen_1776407513_554.txt earth/gen_1776407516_555.txt earth/gen_1776407519_556.txt earth/gen_1776407527_559.txt earth/gen_1776407529_560.txt earth/gen_1776407532_561.txt earth/gen_1776407534_562.txt earth/gen_1776407539_564.txt earth/gen_1776407542_565.txt earth/gen_1776407544_566.txt earth/gen_1776407547_567.txt earth/gen_1776407550_568.txt earth/gen_1776407555_570.txt earth/gen_1776407558_571.txt earth/gen_1776407560_572.txt earth/gen_1776407563_573.txt earth/gen_1776407565_574.txt earth/gen_1776407573_577.txt earth/gen_1776407576_578.txt earth/gen_1776407578_579.txt earth/gen_1776407581_580.txt earth/gen_1776407588_583.txt earth/gen_1776407591_584.txt earth/gen_1776407594_585.txt earth/gen_1776407597_586.txt earth/gen_1776407604_589.txt earth/gen_1776407607_590.txt earth/gen_1776407609_591.txt earth/gen_1776407612_592.txt earth/gen_1776407620_595.txt earth/gen_1776407622_596.txt earth/gen_1776407628_598.txt earth/gen_1776407635_601.txt earth/gen_1776407638_602.txt earth/gen_1776407641_603.txt earth/gen_1776407643_604.txt earth/gen_1776407651_607.txt earth/gen_1776407653_608.txt earth/gen_1776407656_609.txt earth/gen_1776407659_610.txt earth/gen_1776407666_613.txt earth/gen_1776407669_614.txt earth/gen_1776407672_615.txt earth/gen_1776407674_616.txt earth/gen_1776407682_619.txt earth/gen_1776407684_620.txt earth/gen_1776407687_621.txt earth/gen_1776407690_622.txt earth/gen_1776407697_625.txt earth/gen_1776407700_626.txt earth/gen_1776407705_628.txt earth/gen_1776407713_631.txt earth/gen_1776407715_632.txt earth/gen_1776407718_633.txt earth/gen_1776407721_634.txt earth/gen_1776407728_637.txt earth/gen_1776407731_638.txt earth/gen_1776407734_639.txt earth/gen_1776407736_640.txt earth/gen_1776407741_642.txt earth/gen_1776407744_643.txt earth/gen_1776407747_644.txt earth/gen_1776407749_645.txt earth/gen_1776407752_646.txt earth/gen_1776407757_648.txt earth/gen_1776407760_649.txt earth/gen_1776407762_650.txt earth/gen_1776407767_652.txt earth/gen_1776407773_654.txt earth/gen_1776407775_655.txt earth/gen_1776407778_656.txt earth/gen_1776407780_657.txt earth/gen_1776407783_658.txt earth/gen_1776407791_661.txt earth/gen_1776407793_662.txt earth/gen_1776407796_663.txt earth/gen_1776407799_664.txt earth/gen_1776407806_667.txt earth/gen_1776407809_668.txt earth/gen_1776407811_669.txt earth/gen_1776407814_670.txt earth/gen_1776407822_673.txt earth/gen_1776407824_674.txt earth/gen_1776407827_675.txt earth/gen_1776407829_676.txt earth/gen_1776407837_679.txt earth/gen_1776407840_680.txt earth/gen_1776407842_681.txt earth/gen_1776407845_682.txt earth/gen_1776407853_685.txt]
+[trainer] micro-train burst (35807 bytes, novelty 0.02) — and lo, it feeds again.
+[syntropy] action=explore | trend=0.0000 | field_dev=-0.032 | purpose_align=0.130 | lr_mul=1.30
+[aml] burst complete: 32 steps, avg loss 2.4893 (memory freed)
+[dna] air wrote 35 bytes to ecology
+[dna] air wrote 28 bytes to ecology
+[dna] air wrote 137 bytes to ecology
+[dna] air wrote 66 bytes to ecology
+[dna] air wrote 261 bytes to ecology
+[dna] air wrote 41 bytes to ecology
+[dna] air wrote 144 bytes to ecology
+[dna] air wrote 78 bytes to ecology
+[dna] air wrote 40 bytes to ecology
+[dna] air wrote 70 bytes to ecology
+[dna] air wrote 42 bytes to ecology
+[dna] air wrote 61 bytes to ecology
+[dna] air wrote 27 bytes to ecology
+[dna] air wrote 42 bytes to ecology
+[dna] air wrote 72 bytes to ecology
+[dna] air wrote 52 bytes to ecology
+[debug-onto] tick=50 corpus=158597 stage=2 freeze=0
+[dna] air wrote 105 bytes to ecology
+[dna] air wrote 83 bytes to ecology
+[dna] air wrote 55 bytes to ecology
+[dna] air wrote 44 bytes to ecology
+[dna] air wrote 29 bytes to ecology
+[dna] air wrote 32 bytes to ecology
+[dna] air wrote 67 bytes to ecology
+[dna] air wrote 58 bytes to ecology
+[dna] air wrote 31 bytes to ecology
+[dna] air wrote 56 bytes to ecology
+[dna] air wrote 38 bytes to ecology
+[dna] air wrote 76 bytes to ecology
+[dna] air wrote 66 bytes to ecology
+[dna] air wrote 32 bytes to ecology
+[dna] air wrote 98 bytes to ecology
+[dna] air wrote 67 bytes to ecology
+[dna] air wrote 35 bytes to ecology
+[debug-onto] tick=100 corpus=158597 stage=2 freeze=0
+[dna] air wrote 229 bytes to ecology
+[dna] air wrote 48 bytes to ecology
+[dna] air wrote 245 bytes to ecology
+[dna] air wrote 135 bytes to ecology
+[dna] air wrote 51 bytes to ecology
+[dna] air wrote 71 bytes to ecology
+[dna] air wrote 17 bytes to ecology
+[dna] air wrote 39 bytes to ecology
+[dna] air wrote 80 bytes to ecology
+[dna] air wrote 21 bytes to ecology
+[dna] air wrote 253 bytes to ecology
+[dna] air wrote 120 bytes to ecology
+[dna] air wrote 13 bytes to ecology
+[dna] air wrote 38 bytes to ecology
+[dna] air wrote 25 bytes to ecology
+[dna] air wrote 101 bytes to ecology
+[debug-onto] tick=150 corpus=158597 stage=2 freeze=0
+[dna] air wrote 95 bytes to ecology
+[dna] air wrote 54 bytes to ecology
+[dna] air wrote 69 bytes to ecology
+[dna] air wrote 104 bytes to ecology
+[dna] air wrote 27 bytes to ecology
+[dna] air wrote 130 bytes to ecology
+[dna] air wrote 64 bytes to ecology
+[dna] air wrote 117 bytes to ecology
+[dna] air wrote 49 bytes to ecology
+[dna] air wrote 123 bytes to ecology
+[dna] air wrote 27 bytes to ecology
+[dna] air wrote 27 bytes to ecology
+[dna] air wrote 56 bytes to ecology
+[dna] air wrote 193 bytes to ecology
+[dna] air wrote 45 bytes to ecology
+[dna] air wrote 52 bytes to ecology
+[dna] air wrote 46 bytes to ecology
+[debug-onto] tick=200 corpus=158597 stage=2 freeze=0
+[dna] air wrote 129 bytes to ecology
+[dna] air wrote 248 bytes to ecology
+[dna] air wrote 39 bytes to ecology
+[dna] air wrote 51 bytes to ecology
+[dna] air wrote 31 bytes to ecology
+[dna] air wrote 91 bytes to ecology
+[dna] air wrote 71 bytes to ecology
+[dna] air wrote 45 bytes to ecology
+[dna] air wrote 38 bytes to ecology
+[dna] air wrote 31 bytes to ecology
+[dna] air wrote 18 bytes to ecology
+[dna] air wrote 111 bytes to ecology
+[dna] air wrote 35 bytes to ecology
+[dna] air wrote 122 bytes to ecology
+[dna] air wrote 118 bytes to ecology
+[dna] air wrote 31 bytes to ecology
+[dna] air wrote 43 bytes to ecology
+[debug-onto] tick=250 corpus=158597 stage=2 freeze=0
+[dna] air wrote 127 bytes to ecology
+[dna] air wrote 76 bytes to ecology
+[dna] air wrote 116 bytes to ecology
+[dna] air wrote 28 bytes to ecology
+[dna] air wrote 123 bytes to ecology
+[dna] air wrote 7 bytes to ecology
+[dna] air wrote 27 bytes to ecology
+[dna] air wrote 56 bytes to ecology
+[dna] air wrote 39 bytes to ecology
+[dna] air wrote 80 bytes to ecology
+[dna] air wrote 76 bytes to ecology
+[dna] air wrote 37 bytes to ecology
+[dna] air wrote 6 bytes to ecology
+[dna] air wrote 35 bytes to ecology
+[dna] air wrote 9 bytes to ecology
+[dna] air wrote 172 bytes to ecology
+[debug-onto] tick=300 corpus=158597 stage=2 freeze=0
+[dna] air wrote 32 bytes to ecology
+[dna] air wrote 34 bytes to ecology
+[dna] air wrote 174 bytes to ecology
+[dna] air wrote 190 bytes to ecology
+[dna] air wrote 43 bytes to ecology
+[dna] air wrote 33 bytes to ecology
+[dna] air wrote 77 bytes to ecology
+[dna] air wrote 64 bytes to ecology
+[dna] air wrote 113 bytes to ecology
+[dna] air wrote 98 bytes to ecology
+[dna] air wrote 72 bytes to ecology
+[dna] air wrote 108 bytes to ecology
+[dna] air wrote 82 bytes to ecology
+[dna] air wrote 98 bytes to ecology
+[dna] air wrote 156 bytes to ecology
+[dna] air wrote 9 bytes to ecology
+[dna] air wrote 86 bytes to ecology
+[debug-onto] tick=350 corpus=158597 stage=2 freeze=0
+[dna] air wrote 43 bytes to ecology
+[dna] air wrote 92 bytes to ecology
+[dna] air wrote 115 bytes to ecology
+[dna] air wrote 160 bytes to ecology
+[dna] air wrote 96 bytes to ecology
+[dna] air wrote 82 bytes to ecology
+[dna] air wrote 108 bytes to ecology
+[dna] air wrote 101 bytes to ecology
+[dna] air wrote 77 bytes to ecology
+[dna] air wrote 299 bytes to ecology
+[dna] air wrote 76 bytes to ecology
+[dna] air wrote 59 bytes to ecology
+[dna] air wrote 12 bytes to ecology
+[dna] air wrote 38 bytes to ecology
+[dna] air wrote 41 bytes to ecology
+[dna] air wrote 257 bytes to ecology
+[dna] air wrote 39 bytes to ecology
+[debug-onto] tick=400 corpus=158597 stage=2 freeze=0
+[dna] air wrote 59 bytes to ecology
+[dna] air wrote 99 bytes to ecology
+[dna] air wrote 43 bytes to ecology
+[dna] air wrote 35 bytes to ecology
+[dna] air wrote 32 bytes to ecology
+[dna] air wrote 63 bytes to ecology
+[dna] air wrote 77 bytes to ecology
+[dna] air wrote 78 bytes to ecology
+[dna] air wrote 45 bytes to ecology
+[dna] air wrote 51 bytes to ecology
+[dna] air wrote 193 bytes to ecology
+[dna] air wrote 64 bytes to ecology
+[dna] air wrote 218 bytes to ecology
+[dna] air wrote 28 bytes to ecology
+[dna] air wrote 79 bytes to ecology
+[dna] air wrote 129 bytes to ecology
+[debug-onto] tick=450 corpus=158597 stage=2 freeze=0
+[dna] air wrote 32 bytes to ecology
+[dna] air wrote 32 bytes to ecology
+[dna] air wrote 64 bytes to ecology
+[dna] air wrote 50 bytes to ecology
+[dna] air wrote 145 bytes to ecology
+[dna] air wrote 88 bytes to ecology
+[dna] air wrote 15 bytes to ecology
+[dna] air wrote 130 bytes to ecology
+[dna] air wrote 15 bytes to ecology
+[dna] air wrote 52 bytes to ecology
+[dna] air wrote 44 bytes to ecology
+[dna] air wrote 143 bytes to ecology
+[dna] air wrote 128 bytes to ecology
+[dna] air wrote 116 bytes to ecology
+[dna] air wrote 99 bytes to ecology
+[dna] air wrote 37 bytes to ecology
+[dna] air wrote 87 bytes to ecology
+[debug-onto] tick=500 corpus=158597 stage=2 freeze=0
+[dna] air wrote 103 bytes to ecology
+[dna] air wrote 40 bytes to ecology
+[dna] air wrote 90 bytes to ecology
+[dna] air wrote 30 bytes to ecology
+[dna] air wrote 40 bytes to ecology
+[dna] air wrote 13 bytes to ecology
+[dna] air wrote 52 bytes to ecology
+[dna] air wrote 41 bytes to ecology
+[dna] air wrote 18 bytes to ecology
+[dna] air wrote 7 bytes to ecology
+[dna] air wrote 52 bytes to ecology
+[dna] air wrote 142 bytes to ecology
+[dna] air wrote 11 bytes to ecology
+[dna] air wrote 85 bytes to ecology
+[dna] air wrote 41 bytes to ecology
+[dna] air wrote 151 bytes to ecology
+[dna] air wrote 46 bytes to ecology
+[debug-onto] tick=550 corpus=158597 stage=2 freeze=0
+[dna] air wrote 30 bytes to ecology
+[dna] air wrote 17 bytes to ecology
+[dna] air wrote 97 bytes to ecology
+[dna] air wrote 128 bytes to ecology
+[dna] air wrote 15 bytes to ecology
+[dna] air wrote 81 bytes to ecology
+[dna] air wrote 18 bytes to ecology
+[dna] air wrote 80 bytes to ecology
+[dna] air wrote 44 bytes to ecology
+[dna] air wrote 36 bytes to ecology
+[dna] air wrote 61 bytes to ecology
+[dna] air wrote 96 bytes to ecology
+[dna] air wrote 42 bytes to ecology
+[dna] air wrote 272 bytes to ecology
+[dna] air wrote 97 bytes to ecology
+[dna] air wrote 56 bytes to ecology
+[debug-onto] tick=600 corpus=158597 stage=2 freeze=0
+[dna] air wrote 194 bytes to ecology
+[dna] air wrote 74 bytes to ecology
+[dna] air wrote 24 bytes to ecology
+
+[evolution] Organism shutting down gracefully.
