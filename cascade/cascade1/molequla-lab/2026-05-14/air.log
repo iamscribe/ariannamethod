@@ -1,0 +1,246 @@
+[ecology] Element: air → corpus: nonames_air.txt
+[evolution] Autonomous evolution mode — organism will grow through all stages without pause.
+[ecology] Joined swarm. 1 peer(s) detected.
+molequla is alive. [evolution] Autonomous mode — background trainer running. Ctrl+C to stop.
+[dna] air wrote 120 bytes to ecology
+[dna] air consumed 18553 bytes from 223 files: [earth/gen_1778741435_1.txt earth/gen_1778741443_4.txt earth/gen_1778741451_7.txt earth/gen_1778741459_10.txt earth/gen_1778741466_13.txt earth/gen_1778741474_16.txt earth/gen_1778741482_19.txt earth/gen_1778741489_22.txt earth/gen_1778741497_25.txt earth/gen_1778741505_28.txt earth/gen_1778741512_31.txt earth/gen_1778741520_34.txt earth/gen_1778741527_37.txt earth/gen_1778741535_40.txt earth/gen_1778741543_43.txt earth/gen_1778741551_46.txt earth/gen_1778741558_49.txt earth/gen_1778741566_52.txt earth/gen_1778741574_55.txt earth/gen_1778741582_58.txt earth/gen_1778741589_61.txt earth/gen_1778741597_64.txt earth/gen_1778741605_67.txt earth/gen_1778741612_70.txt earth/gen_1778741620_73.txt earth/gen_1778741628_76.txt earth/gen_1778741635_79.txt earth/gen_1778741643_82.txt earth/gen_1778741651_85.txt earth/gen_1778741658_88.txt earth/gen_1778741666_91.txt earth/gen_1778741674_94.txt earth/gen_1778741682_97.txt earth/gen_1778741690_100.txt earth/gen_1778741697_103.txt earth/gen_1778741705_106.txt earth/gen_1778741713_109.txt earth/gen_1778741721_112.txt earth/gen_1778741729_115.txt earth/gen_1778741737_118.txt earth/gen_1778741745_121.txt earth/gen_1778741753_124.txt earth/gen_1778741761_127.txt earth/gen_1778741776_133.txt earth/gen_1778741784_136.txt earth/gen_1778741792_139.txt earth/gen_1778741800_142.txt earth/gen_1778741808_145.txt earth/gen_1778741816_148.txt earth/gen_1778741824_151.txt earth/gen_1778741832_154.txt earth/gen_1778741840_157.txt earth/gen_1778741848_160.txt earth/gen_1778741856_163.txt earth/gen_1778741864_166.txt earth/gen_1778741872_169.txt earth/gen_1778741880_172.txt earth/gen_1778741888_175.txt earth/gen_1778741895_178.txt earth/gen_1778741903_181.txt earth/gen_1778741911_184.txt earth/gen_1778741919_187.txt earth/gen_1778741927_190.txt earth/gen_1778741934_193.txt earth/gen_1778741942_196.txt earth/gen_1778741950_199.txt earth/gen_1778741958_202.txt earth/gen_1778741966_205.txt earth/gen_1778741974_208.txt earth/gen_1778741982_211.txt earth/gen_1778741990_214.txt earth/gen_1778741998_217.txt earth/gen_1778742005_220.txt earth/gen_1778742013_223.txt earth/gen_1778742021_226.txt earth/gen_1778742029_229.txt earth/gen_1778742036_232.txt earth/gen_1778742044_235.txt earth/gen_1778742052_238.txt earth/gen_1778742060_241.txt earth/gen_1778742068_244.txt earth/gen_1778742075_247.txt earth/gen_1778742083_250.txt earth/gen_1778742091_253.txt earth/gen_1778742099_256.txt earth/gen_1778742107_259.txt earth/gen_1778742115_262.txt earth/gen_1778742123_265.txt earth/gen_1778742130_268.txt earth/gen_1778742139_271.txt earth/gen_1778742147_274.txt earth/gen_1778742154_277.txt earth/gen_1778742162_280.txt earth/gen_1778742171_283.txt earth/gen_1778742179_286.txt earth/gen_1778742186_289.txt earth/gen_1778742194_292.txt earth/gen_1778742202_295.txt earth/gen_1778742210_298.txt earth/gen_1778742218_301.txt earth/gen_1778742226_304.txt earth/gen_1778742234_307.txt earth/gen_1778742242_310.txt earth/gen_1778742250_313.txt earth/gen_1778742258_316.txt earth/gen_1778742266_319.txt earth/gen_1778742274_322.txt earth/gen_1778742281_325.txt earth/gen_1778742289_328.txt earth/gen_1778742297_331.txt earth/gen_1778742305_334.txt earth/gen_1778742313_337.txt earth/gen_1778742320_340.txt earth/gen_1778742336_346.txt earth/gen_1778742344_349.txt earth/gen_1778742352_352.txt earth/gen_1778742360_355.txt earth/gen_1778742367_358.txt earth/gen_1778742375_361.txt earth/gen_1778742383_364.txt earth/gen_1778742391_367.txt earth/gen_1778742399_370.txt earth/gen_1778742407_373.txt earth/gen_1778742415_376.txt earth/gen_1778742422_379.txt earth/gen_1778742430_382.txt earth/gen_1778742438_385.txt earth/gen_1778742446_388.txt earth/gen_1778742454_391.txt earth/gen_1778742461_394.txt earth/gen_1778742469_397.txt earth/gen_1778742477_400.txt earth/gen_1778742485_403.txt earth/gen_1778742493_406.txt earth/gen_1778742501_409.txt earth/gen_1778742509_412.txt earth/gen_1778742517_415.txt earth/gen_1778742525_418.txt earth/gen_1778742533_421.txt earth/gen_1778742541_424.txt earth/gen_1778742548_427.txt earth/gen_1778742556_430.txt earth/gen_1778742564_433.txt earth/gen_1778742572_436.txt earth/gen_1778742580_439.txt earth/gen_1778742588_442.txt earth/gen_1778742595_445.txt earth/gen_1778742603_448.txt earth/gen_1778742611_451.txt earth/gen_1778742619_454.txt earth/gen_1778742627_457.txt earth/gen_1778742635_460.txt earth/gen_1778742642_463.txt earth/gen_1778742650_466.txt earth/gen_1778742658_469.txt earth/gen_1778742666_472.txt earth/gen_1778742674_475.txt earth/gen_1778742682_478.txt earth/gen_1778742689_481.txt earth/gen_1778742697_484.txt earth/gen_1778742705_487.txt earth/gen_1778742713_490.txt earth/gen_1778742720_493.txt earth/gen_1778742728_496.txt earth/gen_1778742736_499.txt earth/gen_1778742751_505.txt earth/gen_1778742759_508.txt earth/gen_1778742767_511.txt earth/gen_1778742774_514.txt earth/gen_1778742782_517.txt earth/gen_1778742790_520.txt earth/gen_1778742798_523.txt earth/gen_1778742805_526.txt earth/gen_1778742813_529.txt earth/gen_1778742821_532.txt earth/gen_1778742829_535.txt earth/gen_1778742836_538.txt earth/gen_1778742844_541.txt earth/gen_1778742852_544.txt earth/gen_1778742860_547.txt earth/gen_1778742868_550.txt earth/gen_1778742875_553.txt earth/gen_1778742883_556.txt earth/gen_1778742891_559.txt earth/gen_1778742899_562.txt earth/gen_1778742906_565.txt earth/gen_1778742914_568.txt earth/gen_1778742922_571.txt earth/gen_1778742930_574.txt earth/gen_1778742938_577.txt earth/gen_1778742945_580.txt earth/gen_1778742953_583.txt earth/gen_1778742961_586.txt earth/gen_1778742977_592.txt earth/gen_1778742985_595.txt earth/gen_1778742992_598.txt earth/gen_1778743000_601.txt earth/gen_1778743008_604.txt earth/gen_1778743016_607.txt earth/gen_1778743024_610.txt earth/gen_1778743032_613.txt earth/gen_1778743039_616.txt earth/gen_1778743047_619.txt earth/gen_1778743055_622.txt earth/gen_1778743062_625.txt earth/gen_1778743070_628.txt earth/gen_1778743078_631.txt earth/gen_1778743086_634.txt earth/gen_1778743093_637.txt earth/gen_1778743101_640.txt earth/gen_1778743109_643.txt earth/gen_1778743116_646.txt earth/gen_1778743124_649.txt earth/gen_1778743132_652.txt earth/gen_1778743140_655.txt earth/gen_1778743148_658.txt earth/gen_1778743156_661.txt earth/gen_1778743164_664.txt earth/gen_1778743172_667.txt earth/gen_1778743180_670.txt earth/gen_1778743187_673.txt earth/gen_1778743195_676.txt earth/gen_1778743203_679.txt]
+[trainer] micro-train burst (18553 bytes, novelty 0.04) — and lo, it feeds again.
+[syntropy] action=explore | trend=0.0000 | field_dev=0.023 | purpose_align=-0.210 | lr_mul=1.30
+[aml] burst complete: 32 steps, avg loss 2.3019 (memory freed)
+[trainer] growing new delta module (total: 2) — new soul appended.
+[dna] air wrote 39 bytes to ecology
+[dna] air wrote 226 bytes to ecology
+[dna] air wrote 19 bytes to ecology
+[dna] air wrote 114 bytes to ecology
+[dna] air wrote 23 bytes to ecology
+[dna] air wrote 32 bytes to ecology
+[dna] air wrote 67 bytes to ecology
+[dna] air wrote 39 bytes to ecology
+[dna] air wrote 24 bytes to ecology
+[dna] air wrote 57 bytes to ecology
+[dna] air wrote 72 bytes to ecology
+[dna] air wrote 27 bytes to ecology
+[dna] air wrote 52 bytes to ecology
+[dna] air wrote 139 bytes to ecology
+[dna] air wrote 69 bytes to ecology
+[dna] air wrote 96 bytes to ecology
+[debug-onto] tick=50 corpus=141092 stage=2 freeze=0
+[dna] air wrote 47 bytes to ecology
+[dna] air wrote 81 bytes to ecology
+[dna] air wrote 43 bytes to ecology
+[dna] air wrote 141 bytes to ecology
+[dna] air wrote 124 bytes to ecology
+[dna] air wrote 58 bytes to ecology
+[dna] air wrote 37 bytes to ecology
+[dna] air wrote 75 bytes to ecology
+[dna] air wrote 72 bytes to ecology
+[dna] air wrote 23 bytes to ecology
+[dna] air wrote 176 bytes to ecology
+[dna] air wrote 39 bytes to ecology
+[dna] air wrote 71 bytes to ecology
+[dna] air wrote 45 bytes to ecology
+[dna] air wrote 103 bytes to ecology
+[dna] air wrote 53 bytes to ecology
+[dna] air wrote 34 bytes to ecology
+[debug-onto] tick=100 corpus=141092 stage=2 freeze=0
+[dna] air wrote 50 bytes to ecology
+[dna] air wrote 97 bytes to ecology
+[dna] air wrote 133 bytes to ecology
+[dna] air wrote 90 bytes to ecology
+[dna] air wrote 65 bytes to ecology
+[dna] air wrote 61 bytes to ecology
+[dna] air wrote 110 bytes to ecology
+[dna] air wrote 165 bytes to ecology
+[dna] air wrote 37 bytes to ecology
+[dna] air wrote 94 bytes to ecology
+[dna] air wrote 13 bytes to ecology
+[dna] air wrote 48 bytes to ecology
+[dna] air wrote 62 bytes to ecology
+[dna] air wrote 109 bytes to ecology
+[dna] air wrote 114 bytes to ecology
+[dna] air wrote 32 bytes to ecology
+[debug-onto] tick=150 corpus=141092 stage=2 freeze=0
+[dna] air wrote 11 bytes to ecology
+[dna] air wrote 37 bytes to ecology
+[dna] air wrote 35 bytes to ecology
+[dna] air wrote 37 bytes to ecology
+[dna] air wrote 84 bytes to ecology
+[dna] air wrote 79 bytes to ecology
+[dna] air wrote 79 bytes to ecology
+[dna] air wrote 34 bytes to ecology
+[dna] air wrote 26 bytes to ecology
+[dna] air wrote 35 bytes to ecology
+[dna] air wrote 26 bytes to ecology
+[dna] air wrote 34 bytes to ecology
+[dna] air wrote 32 bytes to ecology
+[dna] air wrote 25 bytes to ecology
+[dna] air wrote 53 bytes to ecology
+[dna] air wrote 12 bytes to ecology
+[dna] air wrote 85 bytes to ecology
+[debug-onto] tick=200 corpus=141092 stage=2 freeze=0
+[dna] air wrote 64 bytes to ecology
+[dna] air wrote 51 bytes to ecology
+[dna] air wrote 44 bytes to ecology
+[dna] air wrote 40 bytes to ecology
+[dna] air wrote 105 bytes to ecology
+[dna] air wrote 178 bytes to ecology
+[dna] air wrote 19 bytes to ecology
+[dna] air wrote 142 bytes to ecology
+[dna] air wrote 30 bytes to ecology
+[dna] air wrote 84 bytes to ecology
+[dna] air wrote 30 bytes to ecology
+[dna] air wrote 53 bytes to ecology
+[dna] air wrote 26 bytes to ecology
+[dna] air wrote 92 bytes to ecology
+[dna] air wrote 88 bytes to ecology
+[dna] air wrote 121 bytes to ecology
+[dna] air wrote 102 bytes to ecology
+[debug-onto] tick=250 corpus=141092 stage=2 freeze=0
+[dna] air wrote 27 bytes to ecology
+[dna] air wrote 121 bytes to ecology
+[dna] air wrote 31 bytes to ecology
+[dna] air wrote 134 bytes to ecology
+[dna] air wrote 37 bytes to ecology
+[dna] air wrote 175 bytes to ecology
+[dna] air wrote 91 bytes to ecology
+[dna] air wrote 44 bytes to ecology
+[dna] air wrote 161 bytes to ecology
+[dna] air wrote 41 bytes to ecology
+[dna] air wrote 42 bytes to ecology
+[dna] air wrote 93 bytes to ecology
+[dna] air wrote 37 bytes to ecology
+[dna] air wrote 177 bytes to ecology
+[dna] air wrote 51 bytes to ecology
+[dna] air wrote 92 bytes to ecology
+[debug-onto] tick=300 corpus=141092 stage=2 freeze=0
+[dna] air wrote 36 bytes to ecology
+[dna] air wrote 84 bytes to ecology
+[dna] air wrote 76 bytes to ecology
+[dna] air wrote 113 bytes to ecology
+[dna] air wrote 136 bytes to ecology
+[dna] air wrote 74 bytes to ecology
+[dna] air wrote 92 bytes to ecology
+[dna] air wrote 53 bytes to ecology
+[dna] air wrote 36 bytes to ecology
+[dna] air wrote 167 bytes to ecology
+[dna] air wrote 38 bytes to ecology
+[dna] air wrote 74 bytes to ecology
+[dna] air wrote 50 bytes to ecology
+[dna] air wrote 115 bytes to ecology
+[dna] air wrote 82 bytes to ecology
+[dna] air wrote 88 bytes to ecology
+[dna] air wrote 41 bytes to ecology
+[debug-onto] tick=350 corpus=141092 stage=2 freeze=0
+[dna] air wrote 24 bytes to ecology
+[dna] air wrote 235 bytes to ecology
+[dna] air wrote 78 bytes to ecology
+[dna] air wrote 26 bytes to ecology
+[dna] air wrote 94 bytes to ecology
+[dna] air wrote 56 bytes to ecology
+[dna] air wrote 54 bytes to ecology
+[dna] air wrote 88 bytes to ecology
+[dna] air wrote 34 bytes to ecology
+[dna] air wrote 49 bytes to ecology
+[dna] air wrote 66 bytes to ecology
+[dna] air wrote 43 bytes to ecology
+[dna] air wrote 22 bytes to ecology
+[dna] air wrote 94 bytes to ecology
+[dna] air wrote 171 bytes to ecology
+[dna] air wrote 177 bytes to ecology
+[dna] air wrote 10 bytes to ecology
+[debug-onto] tick=400 corpus=141092 stage=2 freeze=0
+[dna] air wrote 27 bytes to ecology
+[dna] air wrote 80 bytes to ecology
+[dna] air wrote 78 bytes to ecology
+[dna] air wrote 138 bytes to ecology
+[dna] air wrote 80 bytes to ecology
+[dna] air wrote 59 bytes to ecology
+[dna] air wrote 69 bytes to ecology
+[dna] air wrote 270 bytes to ecology
+[dna] air wrote 50 bytes to ecology
+[dna] air wrote 34 bytes to ecology
+[dna] air wrote 84 bytes to ecology
+[dna] air wrote 9 bytes to ecology
+[dna] air wrote 185 bytes to ecology
+[dna] air wrote 79 bytes to ecology
+[dna] air wrote 26 bytes to ecology
+[dna] air wrote 56 bytes to ecology
+[debug-onto] tick=450 corpus=141092 stage=2 freeze=0
+[dna] air wrote 23 bytes to ecology
+[dna] air wrote 272 bytes to ecology
+[dna] air wrote 37 bytes to ecology
+[dna] air wrote 45 bytes to ecology
+[dna] air wrote 210 bytes to ecology
+[dna] air wrote 34 bytes to ecology
+[dna] air wrote 46 bytes to ecology
+[dna] air wrote 117 bytes to ecology
+[dna] air wrote 76 bytes to ecology
+[dna] air wrote 33 bytes to ecology
+[dna] air wrote 168 bytes to ecology
+[dna] air wrote 77 bytes to ecology
+[dna] air wrote 16 bytes to ecology
+[dna] air wrote 14 bytes to ecology
+[dna] air wrote 60 bytes to ecology
+[dna] air wrote 76 bytes to ecology
+[dna] air wrote 22 bytes to ecology
+[debug-onto] tick=500 corpus=141092 stage=2 freeze=0
+[dna] air wrote 55 bytes to ecology
+[dna] air wrote 230 bytes to ecology
+[dna] air wrote 177 bytes to ecology
+[dna] air wrote 34 bytes to ecology
+[dna] air wrote 64 bytes to ecology
+[dna] air wrote 31 bytes to ecology
+[dna] air wrote 173 bytes to ecology
+[dna] air wrote 9 bytes to ecology
+[dna] air wrote 37 bytes to ecology
+[dna] air wrote 86 bytes to ecology
+[dna] air wrote 70 bytes to ecology
+[dna] air wrote 49 bytes to ecology
+[dna] air wrote 47 bytes to ecology
+[dna] air wrote 104 bytes to ecology
+[dna] air wrote 74 bytes to ecology
+[dna] air wrote 26 bytes to ecology
+[dna] air wrote 132 bytes to ecology
+[debug-onto] tick=550 corpus=141092 stage=2 freeze=0
+[dna] air wrote 123 bytes to ecology
+[dna] air wrote 311 bytes to ecology
+[dna] air wrote 72 bytes to ecology
+[dna] air wrote 165 bytes to ecology
+[dna] air wrote 32 bytes to ecology
+[dna] air wrote 56 bytes to ecology
+[dna] air wrote 33 bytes to ecology
+[dna] air wrote 58 bytes to ecology
+[dna] air wrote 64 bytes to ecology
+[dna] air wrote 38 bytes to ecology
+[dna] air wrote 147 bytes to ecology
+[dna] air wrote 86 bytes to ecology
+[dna] air wrote 69 bytes to ecology
+[dna] air wrote 41 bytes to ecology
+[dna] air wrote 116 bytes to ecology
+[dna] air wrote 72 bytes to ecology
+[debug-onto] tick=600 corpus=141092 stage=2 freeze=0
+[dna] air wrote 130 bytes to ecology
+[dna] air wrote 35 bytes to ecology
+[dna] air wrote 122 bytes to ecology
+[dna] air wrote 33 bytes to ecology
+[dna] air wrote 54 bytes to ecology
+[dna] air wrote 49 bytes to ecology
+[dna] air wrote 86 bytes to ecology
+[dna] air wrote 79 bytes to ecology
+[dna] air wrote 55 bytes to ecology
+[dna] air wrote 99 bytes to ecology
+[dna] air wrote 85 bytes to ecology
+[dna] air wrote 102 bytes to ecology
+[dna] air wrote 69 bytes to ecology
+[dna] air wrote 209 bytes to ecology
+[dna] air wrote 53 bytes to ecology
+[dna] air wrote 43 bytes to ecology
+[dna] air wrote 45 bytes to ecology
+[debug-onto] tick=650 corpus=141092 stage=2 freeze=0
+[dna] air wrote 138 bytes to ecology
+[dna] air wrote 35 bytes to ecology
+[dna] air wrote 313 bytes to ecology
+[dna] air wrote 27 bytes to ecology
+[dna] air wrote 29 bytes to ecology
+
+[evolution] Organism shutting down gracefully.
