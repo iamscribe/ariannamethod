@@ -39,3 +39,20 @@ Tomorrow's Haiku input = NanoJanus 12 words + yesterday's Penelope 12 words.
 - `penelope-lab/YYYY-MM-DD.txt` — today's 12 words
 - `molequla-lab/YYYY-MM-DD/` — today's evolution logs
 - `nanojanus-lab/YYYY-MM-DD.txt` — today's 12 words
+
+---
+
+## 2026-05-16
+
+**seed:**  extended penelope by loaded mode: master fog sand grid rudder hawk herb 
+
+**haiku:**
+ripe space flow pattern
+rhythm pulse shift dance light sound voice
+path resonance path
+
+**penelope:** extended penelope by loaded mode: resonance oath sand wall moss mesh hero 
+
+**molequla:** 
+
+**nanojanus:** psalm awl satin garland sand oth ers bog moss ates oar sled 
