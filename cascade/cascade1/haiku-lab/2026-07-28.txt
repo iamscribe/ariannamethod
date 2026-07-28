@@ -1,0 +1,3 @@
+order symmetry
+convergence divergence roar
+paradox signal
